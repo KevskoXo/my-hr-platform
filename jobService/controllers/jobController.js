@@ -1,7 +1,7 @@
 // jobService/controllers/jobController.js
 
 const Job = require('../models/jobModel');
-const recruiter = require('../../recruiterService/models/recruiterModel')
+const Recruiter = require('../../recruiterService/models/recruiterModel')
 
 // Get all jobs
 exports.getAllJobs = async (req, res) => {
@@ -71,5 +71,21 @@ exports.createJob = async (req, res) => {
         res.status(201).json(newJob);
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+};
+
+// Jobs nach Kriterien suchen
+exports.searchJobs = async (req, res) => {
+    try {
+        const { title, location, industry } = req.query;
+        const query = {};
+        if (title) query.title = new RegExp(title, 'i');
+        if (location) query.location = new RegExp(location, 'i');
+        if (industry) query.industry = new RegExp(industry, 'i');
+
+        const jobs = await Job.find(query);
+        res.status(200).json(jobs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };
