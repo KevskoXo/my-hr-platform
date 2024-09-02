@@ -1,0 +1,48 @@
+Mir ist gerade eingefallen, dass ich die konkreten features der platform nochmal aufzählen sollte bevor wir weitermachen. Also mir ist aufgefallen das HR immer unpersönlicher wird. LinkedIn hat so viele nutzlose features und dieser social media part mit einfach nur bullshit posten nervt. Karriere.at zb ist eine Jobplatform in österreich aber da sind zu wenige nützliche features und es ist uneinheitlich.
+
+Also daher meine plattform soll weltweit einsetzbar sein. Es gibt zwei teile, einen für bewerber, einen für recruiter bzw firmen. Firmen laden stellen hoch bzw. wir verliken sie irgendwie mit anderen platformen oder der firmen page. Bewerber laden lebensläufe hoch, die standartisiert sind. Tags (die entweder gesetzt werden oder über KI automatisch von uns gesetzt werden) helfen zu filtern. Zb nach länder (das sollte über die IP automatisch vorprogrammiert sein) oder nach rbanchen und so weiter. Bewerber sollen passende jobs vorgeschlagen bekommen nach gewissen kriterien. ZB ich kann einer KI schreiben was ich genau will und es werden angebote von unserer platform zurückgeschickt. Recruiter sollen auch filtern können und über einen integrierten messenger direkt personen anschreiben (ohne handynumme roder dergleichen). Vl bauen wir auch eine video bewerbungsroom ein.
+
+Macht das sinn?
+
+ChatGPT:
+ChatGPT
+Ja, das macht definitiv Sinn! Dein Konzept adressiert einige der größten Frustrationen, die sowohl Bewerber als auch Recruiter mit aktuellen Plattformen wie LinkedIn oder Karriere.at haben. Durch die Kombination von KI-basierten Features, Benutzerfreundlichkeit und einem klaren Fokus auf Effizienz und Personalisierung könntest du eine Plattform schaffen, die sich von der Konkurrenz abhebt.
+
+Zusammenfassung der Features:
+Zwei getrennte Bereiche: Einer für Bewerber, einer für Recruiter/Firmen.
+
+Jobanzeigen:
+
+Firmen können Stellenanzeigen hochladen.
+Integration mit anderen Plattformen oder der Firmenwebsite zur Synchronisation der Jobangebote.
+Standardisierte Lebensläufe:
+
+Bewerber laden Lebensläufe hoch, die ein standardisiertes Format haben.
+Tags zur automatischen oder manuellen Kategorisierung (z.B. Branchen, Länder, Skills).
+Automatisches Vorschlagswesen:
+
+Bewerbern werden passende Jobs vorgeschlagen, basierend auf festgelegten Kriterien.
+Möglichkeit, eine KI zu nutzen, um spezifische Anforderungen einzugeben und gezielte Jobvorschläge zu erhalten.
+Recruiter-Filter:
+
+Rekrutierer können die Lebensläufe nach den Tags und weiteren Kriterien filtern.
+Integrierter Messenger:
+
+Direkte Kommunikation zwischen Recruitern und Bewerbern innerhalb der Plattform.
+Kein Austausch persönlicher Kontaktdaten notwendig.
+Videobewerbungsraum (optional):
+
+Möglichkeit, Videointerviews direkt über die Plattform durchzuführen.
+Nächste Schritte:
+Feature-Priorisierung: Bestimme, welche Features zu Beginn implementiert werden sollen. Es könnte sinnvoll sein, mit einer Basisversion der Plattform zu starten und dann schrittweise weitere Features hinzuzufügen.
+
+Technische Umsetzung planen:
+
+Backend: Skalierbare Datenbank (MongoDB passt hier gut), API für die verschiedenen Services, Authentifizierung und Autorisierung.
+Frontend: Einfache und intuitive Benutzeroberfläche für Bewerber und Recruiter, Integration der KI-Features.
+KI-Integration: API für die automatische Tag-Vergabe und Jobvorschläge.
+Prototyping: Ein erster Prototyp könnte helfen, Feedback zu sammeln und das Konzept zu validieren, bevor du mit der vollständigen Entwicklung beginnst.
+
+Feedbackschleifen: Teste die Plattform mit echten Nutzern und Firmen, um herauszufinden, welche Funktionen besonders gut ankommen und wo Optimierungsbedarf besteht.
+
+Mit dieser klaren Vision und einem strukturierten Ansatz könnte deine Plattform zu einem echten Game-Changer in der HR-Welt werden.
