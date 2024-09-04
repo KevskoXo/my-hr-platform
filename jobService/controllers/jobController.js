@@ -73,6 +73,8 @@ exports.createJob = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
+//current token:
+//"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWNydWl0ZXJJZCI6IjY2ZDc1ZTk2NWQ5NGVlNTg4NGVkMmQ2YyIsImlhdCI6MTcyNTM5MDUxOCwiZXhwIjoxNzI1Mzk0MTE4fQ.pygGdLATwY0AVzjZrma8TPgKHkTEuNx880b0eoCa-ZA"
 
 // Jobs nach Kriterien suchen
 exports.searchJobs = async (req, res) => {

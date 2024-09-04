@@ -1,5 +1,6 @@
 const Recruiter = require('../models/recruiterModel');
 const Company = require('../../companyService/models/companyModel'); // Für das Verknüpfen von Unternehmen
+const Job = require('../../jobService/models/jobModel');  //für populate jobs
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
