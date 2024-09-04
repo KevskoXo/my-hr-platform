@@ -1,5 +1,5 @@
 // jobService/controllers/jobController.js
-
+const axios = require('axios');
 const Job = require('../models/jobModel');
 const Recruiter = require('../../recruiterService/models/recruiterModel')
 
@@ -52,10 +52,25 @@ exports.createJob = async (req, res) => {
     try {
         const { title, description, company, location, tags } = req.body;
         const recruiterId = req.user.recruiterId; // Recruiter ID aus dem JWT Token
-
+        //console.log("recruiterId:" + recruiterId);
+        
+        // JWT Token extrahieren
+        const token = req.headers.authorization?.split(' ')[1]; 
+        
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+        
+        // Anfrage an den Recruiter-Service, um den Recruiter zu validieren
+        const response = await axios.get(`http://localhost:5002/recruiters/${recruiterId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
         // Überprüfen, ob der Recruiter existiert
-        const recruiter = await Recruiter.findById(recruiterId);
-        if (!recruiter) return res.status(404).json({ message: 'Recruiter not found' });
+        const recruiter = response.data;
+        if (!recruiter) {
+           return res.status(404).json({ message: 'Recruiter not found' });
+        }
 
         // Neuen Job erstellen
         const newJob = new Job({
@@ -73,8 +88,6 @@ exports.createJob = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
-//current token:
-//"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWNydWl0ZXJJZCI6IjY2ZDc1ZTk2NWQ5NGVlNTg4NGVkMmQ2YyIsImlhdCI6MTcyNTM5MDUxOCwiZXhwIjoxNzI1Mzk0MTE4fQ.pygGdLATwY0AVzjZrma8TPgKHkTEuNx880b0eoCa-ZA"
 
 // Jobs nach Kriterien suchen
 exports.searchJobs = async (req, res) => {

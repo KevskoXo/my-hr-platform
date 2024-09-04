@@ -87,7 +87,7 @@ exports.loginRecruiter = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
-
+        //console.log(token);
         res.json({ token });
     } catch (error) {
         res.status(500).json({ error: error.message });
