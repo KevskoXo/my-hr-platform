@@ -3,11 +3,40 @@ const axios = require('axios');
 const Job = require('../models/jobModel');
 const Recruiter = require('../../recruiterService/models/recruiterModel')
 
-// Get all jobs
+// Get all jobs with filters
 exports.getAllJobs = async (req, res) => {
     try {
-        const jobs = await Job.find();
-        res.json(jobs);
+        const { title, location, company, tags } = req.query;
+
+        // Filter-Objekt initialisieren
+        let filter = {};
+
+        // Filter nach Titel
+        if (title) {
+            filter.title = { $regex: title, $options: 'i' }; // 'i' für case-insensitive Suche
+        }
+
+        // Filter nach Standort
+        if (location) {
+            filter.location = { $regex: location, $options: 'i' };
+        }
+
+        // Filter nach Unternehmen
+        if (company) {
+            const companyObject = await Company.findOne({ name: company });
+            if (companyObject) {
+                filter.company = companyObject._id;
+            }
+        }
+
+        // Filter nach Tags
+        if (tags) {
+            filter.tags = { $in: tags.split(',') };
+        }
+
+        // Jobs mit Filtern abrufen
+        const jobs = await Job.find(filter);//.populate('company', 'name');
+        res.status(200).json(jobs);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
