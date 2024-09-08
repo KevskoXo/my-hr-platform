@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const resumeController = require('../controllers/resumeController');
-const authenticateUser = require('../middleware/authenticateUser');
+const authenticateUser = require('../middleware/auth');
 
 // Lebenslauf erstellen
 router.post('/create', authenticateUser, resumeController.createResume);

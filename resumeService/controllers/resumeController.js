@@ -1,10 +1,15 @@
 const Resume = require('../models/resumeModel');
+const User = require('../../userService/models/userModel');
+const mongoose = require('mongoose');
 
 // Lebenslauf erstellen
 exports.createResume = async (req, res) => {
     try {
+        console.log('req.user:', req.user);
+        console.log('req.user:', req.user.userId);
         const { summary, experience, education, skills, certifications, languages } = req.body;
-        const userId = req.user.id;
+        const userId = req.user.userId;
+        //const userObject = await User.findById(mongoose.Types.ObjectId(userId));
 
         // Überprüfen, ob der Nutzer bereits einen Lebenslauf hat
         const existingResume = await Resume.findOne({ user: userId });

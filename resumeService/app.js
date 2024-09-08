@@ -2,21 +2,20 @@
 
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config(); // Lade Umgebungsvariablen aus der .env-Datei
+require('dotenv').config();
 
 const app = express();
-
-// Middleware für JSON-Parsing
 app.use(express.json());
 
+// Routes
+const resumeRoutes = require('./routes/resumeRoutes');
+app.use('/resume', resumeRoutes);
+
 // Verbinde mit MongoDB
-mongoose.connect(process.env.MONGO_URI_DEFAULT)
-    .then(() => console.log('MongoDB connected'))
+console.log(process.env.MONGO_URI_RESUME);
+mongoose.connect(process.env.MONGO_URI_RESUME)
+    .then(() => console.log('ResumeService connected to MongoDB'))
     .catch(err => console.log(err));
 
-// Routen
-const defaultRoutes = require('./routes/defaultRoutes');
-app.use('/jobs', defaultRoutes);
-
-const PORT = process.env.PORT_DEFAULT|| 5001; // Ein anderer Port als der User Service
-app.listen(PORT, () => console.log(`DefaultService running on port ${PORT}`));
+const PORT = process.env.PORT_RESUME || 5002;
+app.listen(PORT, () => console.log(`ResumeService running on port ${PORT}`));
