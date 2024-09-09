@@ -1,4 +1,4 @@
-// conversationService/app.js
+// defaultService/app.js
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -10,13 +10,13 @@ const app = express();
 app.use(express.json());
 
 // Verbinde mit MongoDB
-mongoose.connect(process.env.MONGO_URI_CONVERSATION)
+mongoose.connect(process.env.MONGO_URI_DEFAULT)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err));
 
 // Routen
-const conversationRoutes = require('./routes/conversationRoutes');
-app.use('/jobs', conversationRoutes);
+const defaultRoutes = require('./routes/defaultRoutes');
+app.use('/jobs', defaultRoutes);
 
-const PORT = process.env.PORT_CONVERSATION|| 5001; // Ein anderer Port als der User Service
+const PORT = process.env.PORT_DEFAULT|| 5001; // Ein anderer Port als der User Service
 app.listen(PORT, () => console.log(`DefaultService running on port ${PORT}`));
