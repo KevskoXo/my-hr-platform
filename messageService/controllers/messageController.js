@@ -1,7 +1,7 @@
 // messageService/controllers/messageController.js
 
 const Message = require('../models/messageModel');
-const Conversation = require('../models/conversationModel');
+const Conversation = require('../../conversationService/models/conversationModel');
 
 // Nachricht senden
 exports.sendMessage = async (req, res) => {
@@ -42,15 +42,13 @@ exports.sendMessage = async (req, res) => {
     }
 };
 
-// Nachrichtenverlauf abrufen
-exports.getConversation = async (req, res) => {
+// Nachrichten in einer Konversation abrufen
+exports.getMessagesInConversation = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { participantId } = req.params;
+        const { conversationId } = req.params;
 
-        const conversation = await Conversation.findOne({
-            participants: { $all: [userId, participantId] }
-        }).populate('messages');
+        const conversation = await Conversation.findById(conversationId).populate('messages');
 
         if (!conversation) {
             return res.status(404).json({ message: 'No conversation found' });
@@ -62,16 +60,16 @@ exports.getConversation = async (req, res) => {
     }
 };
 
-// Alle Konversationen des Nutzers abrufen
-exports.getAllConversations = async (req, res) => {
+// Alle Nachrichten eines Nutzers abrufen
+exports.getUserMessages = async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        const conversations = await Conversation.find({
-            participants: userId
-        }).populate('participants messages');
+        const messages = await Message.find({
+            $or: [{ sender: userId }, { recipient: userId }]
+        });
 
-        res.status(200).json(conversations);
+        res.status(200).json(messages);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

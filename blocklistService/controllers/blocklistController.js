@@ -2,66 +2,66 @@
 
 const Blocklist = require('../models/blocklistModel');
 
-// Nutzer blockieren
-exports.blockUser = async (req, res) => {
+// Recruiter blockieren
+exports.blockRecruiter = async (req, res) => {
     try {
-        const userId = req.user.userId;
-        const { blockedUserId } = req.body;
+        const userId = req.user.userId; // Der User, der blockiert
+        const { recruiterId } = req.body; // Der Recruiter, der blockiert wird
 
         let blocklist = await Blocklist.findOne({ user: userId });
 
         if (!blocklist) {
             blocklist = new Blocklist({
                 user: userId,
-                blockedUsers: [blockedUserId],
+                blockedRecruiters: [recruiterId], // Blockierte Recruiter
             });
         } else {
-            if (!blocklist.blockedUsers.includes(blockedUserId)) {
-                blocklist.blockedUsers.push(blockedUserId);
+            if (!blocklist.blockedRecruiters.includes(recruiterId)) {
+                blocklist.blockedRecruiters.push(recruiterId);
             }
         }
 
         await blocklist.save();
 
-        res.status(200).json({ message: 'User blocked successfully' });
+        res.status(200).json({ message: 'Recruiter successfully blocked' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-// Nutzer entblockieren
-exports.unblockUser = async (req, res) => {
+// Recruiter entblockieren
+exports.unblockRecruiter = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { blockedUserId } = req.body;
+        const { recruiterId } = req.body;
 
         const blocklist = await Blocklist.findOne({ user: userId });
 
         if (blocklist) {
-            blocklist.blockedUsers = blocklist.blockedUsers.filter(
-                (id) => id.toString() !== blockedUserId
+            blocklist.blockedRecruiters = blocklist.blockedRecruiters.filter(
+                (id) => id.toString() !== recruiterId
             );
             await blocklist.save();
         }
 
-        res.status(200).json({ message: 'User unblocked successfully' });
+        res.status(200).json({ message: 'Recruiter successfully unblocked' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-// Alle blockierten Nutzer abrufen
-exports.getBlockedUsers = async (req, res) => {
+// Alle blockierten Recruiter abrufen
+exports.getBlockedRecruiters = async (req, res) => {
     try {
         const userId = req.user.userId;
 
-        const blocklist = await Blocklist.findOne({ user: userId }).populate('blockedUsers');
+        const blocklist = await Blocklist.findOne({ user: userId }).populate('blockedRecruiters');
 
         if (!blocklist) {
-            return res.status(404).json({ message: 'No blocked users found' });
+            return res.status(404).json({ message: 'No blocked recruiters found' });
         }
 
-        res.status(200).json(blocklist.blockedUsers);
+        res.status(200).json(blocklist.blockedRecruiters);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

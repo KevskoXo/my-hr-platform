@@ -3,10 +3,10 @@
 const express = require('express');
 const router = express.Router();
 const blocklistController = require('../controllers/blocklistController');
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/auth');
 
 // Blocklist eines Nutzers abrufen
-router.get('/', authMiddleware, blocklistController.getBlocklist);
+router.get('/', authMiddleware, blocklistController.getBlockedRecruiters);
 
 // Einen Recruiter zur Blockliste hinzufügen
 router.post('/block/:recruiterId', authMiddleware, blocklistController.blockRecruiter);

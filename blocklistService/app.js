@@ -19,4 +19,4 @@ const blocklistRoutes = require('./routes/blocklistRoutes');
 app.use('/jobs', blocklistRoutes);
 
 const PORT = process.env.PORT_BLOCKLIST|| 5001; // Ein anderer Port als der User Service
-app.listen(PORT, () => console.log(`DefaultService running on port ${PORT}`));
+app.listen(PORT, () => console.log(`BlocklistService running on port ${PORT}`));

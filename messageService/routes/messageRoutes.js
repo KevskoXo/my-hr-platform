@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const messageController = require('../controllers/messageController');
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/auth');
 
 // Neue Nachricht senden
 router.post('/send', authMiddleware, messageController.sendMessage);
