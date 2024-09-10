@@ -4,8 +4,8 @@ Lastenheft für die „my-hr-platform“
 Entwicklung einer weltweit einsetzbaren HR-Plattform für Bewerber und Recruiter mit Fokus auf Benutzerfreundlichkeit und Personalisierung.
 
 1.2 Zielgruppe
-	Bewerber: Personen, die sich um Stellen bewerben.
-	Recruiter/Firmen: Unternehmen, die Stellenangebote veröffentlichen und Bewerber suchen.
+Bewerber: Personen, die sich um Stellen bewerben.
+Recruiter/Firmen: Unternehmen, die Stellenangebote veröffentlichen und Bewerber suchen.
 2. Systembeschreibung
 2.1 Allgemeine Systemübersicht
 Die Plattform besteht aus mehreren Microservices, die miteinander über APIs kommunizieren. Dazu gehören:
