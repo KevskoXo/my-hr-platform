@@ -1,4 +1,4 @@
-// defaultService/app.js
+// jobApplicationService/app.js
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -10,13 +10,13 @@ const app = express();
 app.use(express.json());
 
 // Verbinde mit MongoDB
-mongoose.connect(process.env.MONGO_URI_DEFAULT)
+mongoose.connect(process.env.MONGO_URI_APPLICATION)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err));
 
 // Routen
-const defaultRoutes = require('./routes/defaultRoutes');
-app.use('/default', defaultRoutes);
+const jobApplicationRoutes = require('./routes/jobApplicationRoutes');
+app.use('/application', jobApplicationRoutes);
 
-const PORT = process.env.PORT_DEFAULT|| 5011; // Ein anderer Port als der User Service
+const PORT = process.env.PORT_APPLICATION|| 5011; // Ein anderer Port als der User Service
 app.listen(PORT, () => console.log(`DefaultService running on port ${PORT}`));
