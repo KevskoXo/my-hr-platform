@@ -14,7 +14,7 @@ const jobApplicationSchema = new mongoose.Schema({
     },
     recruiterId: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User', 
+        ref: 'Recruiter', 
         required: true 
     }, // Recruiter, der die Bewerbung verwaltet
     status: { 

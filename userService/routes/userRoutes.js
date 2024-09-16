@@ -12,6 +12,10 @@ router.post('/login', userController.loginUser);
 // Geschützte Route für User Profil
 router.get('/profile', authMiddleware, userController.getUserProfile);
 
+// User nach id suchen.
+router.get('/:id', userController.getUserById);
+
+
 // Lebenslauf erstellen
 router.post('/resume/create', authMiddleware, async (req, res) => {
     try {

@@ -2,11 +2,26 @@
 const JobApplication = require('../models/jobApplicationModel');
 
 // Holt alle Bewerbungen für eine bestimmte Jobanzeige
+const axios = require('axios');
+
 exports.getJobApplications = async (req, res) => {
     try {
         const jobId = req.params.jobId;
-        const applications = await JobApplication.find({ jobId }).populate('applicantId recruiterId');
-        res.status(200).json(applications);
+        const applications = await JobApplication.find({ jobId });
+
+        // Holen der User- und Recruiter-Daten für jede Bewerbung
+        const populatedApplications = await Promise.all(applications.map(async (app) => {
+            const applicantResponse = await axios.get(`http://localhost:5000/users/${app.applicantId}`); // Anfrage an den UserService
+            const recruiterResponse = await axios.get(`http://localhost:5002/recruiters/${app.recruiterId}`); // Anfrage an den RecruiterService
+            
+            return {
+                ...app._doc,
+                applicant: applicantResponse.data,
+                recruiter: recruiterResponse.data
+            };
+        }));
+
+        res.status(200).json(populatedApplications);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching job applications', error });
     }

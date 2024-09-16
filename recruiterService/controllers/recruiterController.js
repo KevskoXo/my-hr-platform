@@ -37,7 +37,7 @@ exports.registerRecruiter = async (req, res) => {
 exports.getRecruiterById = async (req, res) => {
     try {
         const { id } = req.params;
-        const recruiter = await Recruiter.findById(id).populate('company').populate('jobs');
+        const recruiter = await Recruiter.findById(id);//.populate('company').populate('jobs');
         if (!recruiter) return res.status(404).json({ message: 'Recruiter not found' });
         res.status(200).json(recruiter);
     } catch (error) {
