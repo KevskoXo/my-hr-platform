@@ -50,4 +50,10 @@ router.get('/resume', auth(['user']), async (req, res) => {
     }
 });
 
+// Refresh Token Route (öffentlich)
+router.post('/refresh-token', userController.refreshToken);
+
+// Logout Route (geschützt)
+router.post('/logout', auth(['user']), userController.logout);
+
 module.exports = router;

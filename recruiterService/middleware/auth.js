@@ -26,3 +26,4 @@ const auth = (requiredRoles = []) => {
 };
 
 module.exports = auth;
+

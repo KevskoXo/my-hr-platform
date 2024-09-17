@@ -3,6 +3,7 @@ const Company = require('../../companyService/models/companyModel'); // Für das
 const Job = require('../../jobService/models/jobModel');  //für populate jobs
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const {generateAccessToken, generateRefreshToken} = require('../utils/tokenUtils')
 
 // Recruiter erstellen
 exports.registerRecruiter = async (req, res) => {
@@ -25,9 +26,15 @@ exports.registerRecruiter = async (req, res) => {
             password: hashedPassword,
         });
 
+        //JWT-Token
+        const accessToken = generateAccessToken(recruiter);
+        const refreshToken = generateRefreshToken(recruiter);
+ 
+        recruiter.refreshToken = refreshToken;
+
         await newRecruiter.save();
 
-        res.status(201).json({ message: 'Recruiter registered successfully' });
+        res.status(201).json({ message: 'Recruiter registered successfully' , accessToken, refreshToken});
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -82,13 +89,15 @@ exports.loginRecruiter = async (req, res) => {
         }
 
         // JWT-Token erstellen
-        const token = jwt.sign(
-            { recruiterId: recruiter._id, role: recruiter.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
+       // JWT-Token plus refreshToken erstellen 
+       const accessToken = generateAccessToken(recruiter);
+       const refreshToken = generateRefreshToken(recruiter);
+
+       recruiter.refreshToken = refreshToken;
+       await recruiter.save();
+
         //console.log(token);
-        res.json({ token });
+        res.json({ refreshToken, accessToken });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -101,5 +110,43 @@ exports.getRecruiterProfile = async (req, res) => {
         res.json(recruiter);
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+};
+
+
+//Token-refresh
+exports.refreshToken = async (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(401).json({ error: 'No token provided' });
+
+    try {
+        const recruiter = await recruiter.findOne({ refreshToken });
+        if (!user) return res.status(403).json({ error: 'Invalid refresh token' });
+
+        jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
+            if (err || recruiter._id.toString() !== decoded.userId) {
+                return res.status(403).json({ error: 'Invalid refresh token' });
+            }
+
+            const newAccessToken = generateAccessToken(user);
+            res.json({ accessToken: newAccessToken });
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+//recruiter logout
+exports.logout = async (req, res) => {
+    try {
+        const recruiter = await Recruiter.findById(req.recruiter.userId);
+        if (!recruiter) {
+            return res.status(404).json({ error: 'Recruiter not found' });
+        }
+        recruiter.refreshToken = null;
+        await recruiter.save();
+        res.json({ message: 'Logged out successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
     }
 };

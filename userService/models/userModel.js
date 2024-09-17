@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         default: 'user', // Standardrolle ist 'user'
     },
+    refreshToken: { type: String },
 });
 
 module.exports = mongoose.model('User', userSchema);

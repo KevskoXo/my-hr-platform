@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const {generateAccessToken, generateRefreshToken} = require('../utils/tokenUtils');
 
 // User Registrierung
 exports.registerUser = async (req, res) => {
@@ -23,9 +24,15 @@ exports.registerUser = async (req, res) => {
             password: hashedPassword,
         });
 
+        //JWT-Token
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+ 
+        user.refreshToken = refreshToken;
+
         await newUser.save();
 
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(201).json({ message: 'User registered successfully' , accessToken, refreshToken});
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -48,14 +55,14 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
-        // JWT-Token erstellen
-        const token = jwt.sign(
-            { userId: user._id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
+        // JWT-Token plus refreshToken erstellen 
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
 
-        res.json({ token });
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        res.json({ accessToken, refreshToken });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -83,3 +90,39 @@ exports.getUserById = async (req, res) => {
     }
 };
 
+//Token-refresh
+exports.refreshToken = async (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(401).json({ error: 'No token provided' });
+
+    try {
+        const user = await User.findOne({ refreshToken });
+        if (!user) return res.status(403).json({ error: 'Invalid refresh token' });
+
+        jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
+            if (err || user._id.toString() !== decoded.userId) {
+                return res.status(403).json({ error: 'Invalid refresh token' });
+            }
+
+            const newAccessToken = generateAccessToken(user);
+            res.json({ accessToken: newAccessToken });
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+//user logout
+exports.logout = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        user.refreshToken = null;
+        await user.save();
+        res.json({ message: 'Logged out successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};

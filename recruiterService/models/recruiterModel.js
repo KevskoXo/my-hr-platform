@@ -29,6 +29,7 @@ const RecruiterSchema = new mongoose.Schema({
         required: true,
         default: 'recruiter', // Standardrolle ist 'recruiter'
     },
+    refreshToken: { type: String },
 });
 
 module.exports = mongoose.model('Recruiter', RecruiterSchema);

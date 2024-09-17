@@ -20,4 +20,10 @@ router.post('/assign-company', auth(['recruiter']), recruiterController.assignCo
 // Geschützte Route, nur zugänglich mit gültigem Token (nur für Recruiter)
 router.get('/profile', auth(['recruiter']), recruiterController.getRecruiterProfile);
 
+// Refresh Token Route (öffentlich)
+router.post('/refresh-token', recruiterController.refreshToken);
+
+// Logout Route (geschützt)
+router.post('/logout', auth(['recruiter']), recruiterController.logout);
+
 module.exports = router;
