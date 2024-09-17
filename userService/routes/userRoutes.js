@@ -1,23 +1,25 @@
+// userService/routes/userRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const authMiddleware = require('../middleware/auth');
+const auth = require('../middleware/auth'); // Auth-Middleware importieren
 const axios = require('axios');
-// Registrierung
+
+// Registrierung (öffentlich)
 router.post('/register', userController.registerUser);
 
-// Login
+// Login (öffentlich)
 router.post('/login', userController.loginUser);
 
-// Geschützte Route für User Profil
-router.get('/profile', authMiddleware, userController.getUserProfile);
+// Geschützte Route für User-Profil
+router.get('/profile', auth(['user']), userController.getUserProfile);
 
-// User nach id suchen.
+// User nach ID suchen (öffentlich)
 router.get('/:id', userController.getUserById);
 
-
-// Lebenslauf erstellen
-router.post('/resume/create', authMiddleware, async (req, res) => {
+// Lebenslauf erstellen (nur für User)
+router.post('/resume/create', auth(['user']), async (req, res) => {
     try {
         const response = await axios.post(`http://localhost:${process.env.PORT_RESUME}/resume/create`, req.body, {
             headers: {
@@ -32,8 +34,8 @@ router.post('/resume/create', authMiddleware, async (req, res) => {
     }
 });
 
-// Lebenslauf anzeigen
-router.get('/resume', authMiddleware, async (req, res) => {
+// Lebenslauf anzeigen (nur für User)
+router.get('/resume', auth(['user']), async (req, res) => {
     try {
         const response = await axios.get(`http://localhost:${process.env.PORT_RESUME}/resume`, {
             headers: {
@@ -43,9 +45,9 @@ router.get('/resume', authMiddleware, async (req, res) => {
 
         res.status(200).json(response.data);
     } catch (error) {
+        console.error('Error details:', error.response ? error.response.data : error.message);
         res.status(500).json({ error: error.message });
     }
 });
-
 
 module.exports = router;

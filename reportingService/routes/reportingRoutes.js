@@ -1,21 +1,23 @@
 // routes/reportingRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const recruiterPerformanceController = require('../controllers/recruiterPerformanceController');
 const jobApplicationController = require('../controllers/jobApplicationController');
 const diversityMetricsController = require('../controllers/diversityMetricsController');
+const auth = require('../middleware/auth'); // Auth-Middleware importieren
 
-// Routen für RecruiterPerformance
-router.get('/recruiter/:recruiterId', recruiterPerformanceController.getRecruiterPerformance);
-router.post('/recruiter', recruiterPerformanceController.addRecruiterPerformance);
+// Routen für RecruiterPerformance (nur für Recruiter)
+router.get('/recruiter/:recruiterId', auth(['recruiter']), recruiterPerformanceController.getRecruiterPerformance);
+router.post('/recruiter', auth(['recruiter']), recruiterPerformanceController.addRecruiterPerformance);
 
-// Routen für JobApplication
-router.get('/applications/:jobId', jobApplicationController.getJobApplications);
-router.post('/applications', jobApplicationController.addJobApplication);
-router.put('/applications/:id', jobApplicationController.updateApplicationStatus);
+// Routen für JobApplication (nur für Recruiter)
+router.get('/applications/:jobId', auth(['recruiter']), jobApplicationController.getJobApplications);
+router.post('/applications', auth(['recruiter']), jobApplicationController.addJobApplication);
+router.put('/applications/:id', auth(['recruiter']), jobApplicationController.updateApplicationStatus);
 
-// Routen für DiversityMetrics
-router.get('/diversity/:jobId', diversityMetricsController.getDiversityMetrics);
-router.post('/diversity', diversityMetricsController.addDiversityMetrics);
+// Routen für DiversityMetrics (nur für Recruiter)
+router.get('/diversity/:jobId', auth(['recruiter']), diversityMetricsController.getDiversityMetrics);
+router.post('/diversity', auth(['recruiter']), diversityMetricsController.addDiversityMetrics);
 
 module.exports = router;

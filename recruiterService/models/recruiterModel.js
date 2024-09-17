@@ -22,7 +22,13 @@ const RecruiterSchema = new mongoose.Schema({
     jobs: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Job'
-    }]
+    }],
+    role: {
+        type: String,
+        enum: ['user', 'recruiter'], // Erlaubte Rollen
+        required: true,
+        default: 'recruiter', // Standardrolle ist 'recruiter'
+    },
 });
 
 module.exports = mongoose.model('Recruiter', RecruiterSchema);

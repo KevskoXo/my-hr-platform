@@ -1,3 +1,4 @@
+// models/userModel.js
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -13,7 +14,13 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-    }
+    },
+    role: {
+        type: String,
+        enum: ['user', 'recruiter'], // Erlaubte Rollen
+        required: true,
+        default: 'user', // Standardrolle ist 'user'
+    },
 });
 
 module.exports = mongoose.model('User', userSchema);

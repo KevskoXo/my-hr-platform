@@ -83,7 +83,7 @@ exports.loginRecruiter = async (req, res) => {
 
         // JWT-Token erstellen
         const token = jwt.sign(
-            { recruiterId: recruiter._id },
+            { recruiterId: recruiter._id, role: recruiter.role },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );

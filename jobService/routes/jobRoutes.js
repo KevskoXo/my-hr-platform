@@ -3,14 +3,14 @@
 const express = require('express');
 const router = express.Router();
 const jobController = require('../controllers/jobController');
-const { authenticateRecruiter } = require ('../middleware/auth.js')
+const auth = require('../middleware/auth'); // Auth-Middleware importieren
 
-router.get('/', jobController.getAllJobs);
-router.post('/', jobController.createJob);
-router.get('/:id', jobController.getJobById);
-router.put('/:id', jobController.updateJob);
-router.delete('/:id', jobController.deleteJob);
-router.post('/create', authenticateRecruiter, jobController.createJob);
-router.get('/search', jobController.searchJobs);
+// Routen für Jobs
+router.get('/', jobController.getAllJobs); // Öffentlich zugänglich
+router.post('/', auth(['recruiter']), jobController.createJob); // Nur Recruiter können Jobs erstellen
+router.get('/:id', jobController.getJobById); // Öffentlich zugänglich
+router.put('/:id', auth(['recruiter']), jobController.updateJob); // Nur Recruiter können Jobs aktualisieren
+router.delete('/:id', auth(['recruiter']), jobController.deleteJob); // Nur Recruiter können Jobs löschen
+router.get('/search', jobController.searchJobs); // Öffentlich zugänglich
 
 module.exports = router;
