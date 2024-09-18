@@ -34,6 +34,14 @@ exports.registerRecruiter = async (req, res) => {
 
         await newRecruiter.save();
 
+        // Refresh Token als HttpOnly-Cookie setzen
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: true, // Aktiviere dies, wenn du HTTPS verwendest
+            sameSite: 'Strict', // Schützt vor CSRF-Angriffen
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Tage in Millisekunden
+        });
+
         res.status(201).json({ message: 'Recruiter registered successfully' , accessToken, refreshToken});
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -96,6 +104,14 @@ exports.loginRecruiter = async (req, res) => {
        recruiter.refreshToken = refreshToken;
        await recruiter.save();
 
+        // Refresh Token als HttpOnly-Cookie setzen
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: true, // Aktiviere dies, wenn du HTTPS verwendest
+            sameSite: 'Strict', // Schützt vor CSRF-Angriffen
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Tage in Millisekunden
+        });
+
         //console.log(token);
         res.json({ refreshToken, accessToken });
     } catch (error) {
@@ -116,19 +132,26 @@ exports.getRecruiterProfile = async (req, res) => {
 
 //Token-refresh
 exports.refreshToken = async (req, res) => {
-    const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(401).json({ error: 'No token provided' });
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
 
     try {
-        const recruiter = await recruiter.findOne({ refreshToken });
-        if (!user) return res.status(403).json({ error: 'Invalid refresh token' });
+        // Benutzer anhand des Refresh Tokens finden
+        const recruiter = await Recruiter.findOne({ refreshToken });
+        if (!recruiter) {
+            return res.status(403).json({ error: 'Invalid refresh token' });
+        }
 
+        // Refresh Token verifizieren
         jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
-            if (err || recruiter._id.toString() !== decoded.userId) {
+            if (err || recruiter._id.toString() !== decoded.recruiterId) {
                 return res.status(403).json({ error: 'Invalid refresh token' });
             }
 
-            const newAccessToken = generateAccessToken(user);
+            // Neues Access Token generieren
+            const newAccessToken = generateAccessToken(recruiter);
             res.json({ accessToken: newAccessToken });
         });
     } catch (err) {
@@ -139,12 +162,13 @@ exports.refreshToken = async (req, res) => {
 //recruiter logout
 exports.logout = async (req, res) => {
     try {
-        const recruiter = await Recruiter.findById(req.recruiter.userId);
-        if (!recruiter) {
-            return res.status(404).json({ error: 'Recruiter not found' });
+        const recruiter = await Recruiter.findById(req.recruiter.recruiterId);
+        if (recruiter) {
+            recruiter.refreshToken = null;
+            await recruiter.save();
         }
-        recruiter.refreshToken = null;
-        await recruiter.save();
+
+        res.clearCookie('refreshToken', { httpOnly: true, secure: true, sameSite: 'Strict' });
         res.json({ message: 'Logged out successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Server error' });

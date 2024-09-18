@@ -32,6 +32,14 @@ exports.registerUser = async (req, res) => {
 
         await newUser.save();
 
+        // Refresh Token als HttpOnly-Cookie setzen
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: true, // Aktiviere dies, wenn du HTTPS verwendest
+            sameSite: 'Strict', // Schützt vor CSRF-Angriffen
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Tage in Millisekunden
+        });
+
         res.status(201).json({ message: 'User registered successfully' , accessToken, refreshToken});
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -62,7 +70,15 @@ exports.loginUser = async (req, res) => {
         user.refreshToken = refreshToken;
         await user.save();
 
-        res.json({ accessToken, refreshToken });
+        // Refresh Token als HttpOnly-Cookie setzen
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: true, // Aktiviere dies, wenn du HTTPS verwendest
+            sameSite: 'Strict', // Schützt vor CSRF-Angriffen
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Tage in Millisekunden
+        });
+
+        res.json({ accessToken });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -92,18 +108,25 @@ exports.getUserById = async (req, res) => {
 
 //Token-refresh
 exports.refreshToken = async (req, res) => {
-    const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(401).json({ error: 'No token provided' });
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
 
     try {
+        // Benutzer anhand des Refresh Tokens finden
         const user = await User.findOne({ refreshToken });
-        if (!user) return res.status(403).json({ error: 'Invalid refresh token' });
+        if (!user) {
+            return res.status(403).json({ error: 'Invalid refresh token' });
+        }
 
+        // Refresh Token verifizieren
         jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
             if (err || user._id.toString() !== decoded.userId) {
                 return res.status(403).json({ error: 'Invalid refresh token' });
             }
 
+            // Neues Access Token generieren
             const newAccessToken = generateAccessToken(user);
             res.json({ accessToken: newAccessToken });
         });
@@ -112,17 +135,20 @@ exports.refreshToken = async (req, res) => {
     }
 };
 
+
 //user logout
 exports.logout = async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+        if (user) {
+            user.refreshToken = null;
+            await user.save();
         }
-        user.refreshToken = null;
-        await user.save();
+
+        res.clearCookie('refreshToken', { httpOnly: true, secure: true, sameSite: 'Strict' });
         res.json({ message: 'Logged out successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
