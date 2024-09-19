@@ -26,4 +26,7 @@ router.post('/refresh-token', recruiterController.refreshToken);
 // Logout Route (geschützt)
 router.post('/logout', auth(['recruiter']), recruiterController.logout);
 
+router.post('/authenticate', recruiterController.authenticateRecruiter);
+
+
 module.exports = router;

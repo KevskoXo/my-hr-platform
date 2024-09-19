@@ -174,3 +174,33 @@ exports.logout = async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
+//authenticate recruiter
+exports.authenticateRecruiter = async (req, res) => {
+    const { email, password } = req.body;
+  
+    try {
+      // Recruiter anhand der E-Mail finden
+      const recruiter = await Recruiter.findOne({ email });
+      if (!recruiter) {
+        return res.status(404).json({ error: 'Recruiter nicht gefunden' });
+      }
+  
+      // Passwort überprüfen
+      const isMatch = await bcrypt.compare(password, recruiter.password);
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
+      }
+  
+      // Recruiterinformationen zurückgeben
+      res.json({
+        userId: recruiter._id,
+        role: 'recruiter',
+        name: recruiter.name,
+        email: recruiter.email,
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Serverfehler' });
+    }
+  };
+  

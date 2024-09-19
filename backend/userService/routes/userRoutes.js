@@ -56,4 +56,7 @@ router.post('/refresh-token', userController.refreshToken);
 // Logout Route (geschützt)
 router.post('/logout', auth(['user']), userController.logout);
 
+router.post('/authenticate', userController.authenticateUser);
+
+
 module.exports = router;

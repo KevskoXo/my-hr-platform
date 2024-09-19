@@ -152,3 +152,33 @@ exports.logout = async (req, res) => {
     }
 };
 
+//authenticate user
+exports.authenticateUser = async (req, res) => {
+    const { email, password } = req.body;
+  
+    try {
+      // Benutzer anhand der E-Mail finden
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+      }
+  
+      // Passwort überprüfen
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
+      }
+  
+      // Benutzerinformationen zurückgeben
+      res.json({
+        userId: user._id,
+        role: 'user',
+        name: user.name,
+        email: user.email,
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Serverfehler' });
+    }
+  };
+  
+
