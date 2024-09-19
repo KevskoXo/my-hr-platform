@@ -1,9 +1,10 @@
 // src/services/axiosInstance.js
 import axios from 'axios';
-import jwt_decode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
+
 
 // Basis-URL deines Backends
-const API_BASE_URL = 'http://localhost:5000'; // Passe die URL an
+const API_BASE_URL = 'http://localhost:5012/authentication'; // Passe die URL an
 
 // Erstelle eine Axios-Instanz
 const axiosInstance = axios.create({
@@ -14,7 +15,7 @@ const axiosInstance = axios.create({
 // Funktion zum Überprüfen, ob das Token abgelaufen ist
 function isTokenExpired(token) {
   if (!token) return true;
-  const decoded = jwt_decode(token);
+  const decoded = jwtDecode(token);
   return decoded.exp * 1000 < Date.now();
 }
 
