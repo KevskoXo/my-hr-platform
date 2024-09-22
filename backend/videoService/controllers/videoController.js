@@ -1,5 +1,5 @@
 const Video = require('../models/videoModel');
-const teamsService = require('../services/teamsService');
+//const teamsService = require('../services/teamsService');
 
 // Bewerbungsgespräch planen
 exports.scheduleInterview = async (req, res) => {
