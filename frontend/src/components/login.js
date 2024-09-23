@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axiosInstance from '../services/axiosInstance';
+import createAxiosInstance from '../services/axiosInstance';
 import { TextField, Button, Typography } from '@mui/material';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { jwtDecode } from 'jwt-decode';
@@ -9,6 +9,8 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
 
+    const axiosInstance = createAxiosInstance('authentication');
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {

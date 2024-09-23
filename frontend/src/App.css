@@ -36,3 +36,15 @@
     transform: rotate(360deg);
   }
 }
+
+/* Hover-Effekt für die Navigations-Icons */
+.MuiBottomNavigationAction-root:hover {
+  background-color: rgba(25, 118, 210, 0.1); /* Hintergrundfarbe bei Hover */
+  border-radius: 50%; /* Runde Umrandung */
+}
+
+/* Markierung für das ausgewählte Icon */
+.Mui-selected {
+  color: #1976d2; /* Farbe für das ausgewählte Icon */
+  border-bottom: 2px solid #1976d2; /* Unterstreichen des ausgewählten Icons */
+}

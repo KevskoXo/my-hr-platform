@@ -1,13 +1,21 @@
 // jobService/app.js
-
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 require('dotenv').config(); // Lade Umgebungsvariablen aus der .env-Datei
+
 
 const app = express();
 
 // Middleware für JSON-Parsing
 app.use(express.json());
+
+// CORS-Konfiguration
+app.use(cors({
+    origin: 'http://localhost:3000', // URL deines Frontends
+    credentials: true,
+  }));
+  
 
 // Verbinde mit MongoDB
 console.log(process.env.MONGO_URI_JOBS);

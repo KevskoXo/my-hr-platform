@@ -8,6 +8,7 @@ import RecruiterDashboard from './components/RecruiterDashboard';
 import Profile from './components/Profile';
 import RecruiterProfile from './components/RecruiterProfile';
 import ProtectedRoute from './components/ProtectedRoute';
+import Jobs from './components/Jobs';
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={<Navigate to="/login" />} />
+                <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute role="user"><Dashboard /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute role="user"><Profile /></ProtectedRoute>} />
                 <Route path="/recruiter/dashboard" element={<ProtectedRoute role="recruiter"><RecruiterDashboard /></ProtectedRoute>} />
