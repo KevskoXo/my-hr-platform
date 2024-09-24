@@ -3,11 +3,13 @@ import createAxiosInstance from '../services/axiosInstance';
 import { TextField, Button, Typography } from '@mui/material';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
+    const navigate = useNavigate(); // useNavigate Hook initialisieren
 
     const axiosInstance = createAxiosInstance('authentication');
     
@@ -68,6 +70,16 @@ const Login = () => {
                             Login
                         </Button>
                         {error && <Typography color="error" align="center" mt={2}>{error}</Typography>}
+                        {/* Register-Button */}
+                        <Button
+                            variant="outlined"
+                            color="secondary"
+                            fullWidth
+                            style={{ marginTop: '10px' }}
+                            onClick={() => navigate('/register')}  // Navigiert zur Registrierungsseite
+                            >
+                            Register
+                        </Button>
                     </form>
                 </div>
             </div>
