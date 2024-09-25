@@ -22,13 +22,15 @@ exports.registerUser = async (req, res) => {
             name,
             email,
             password: hashedPassword,
+            role: 'user',
         });
 
         //JWT-Token
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
- 
-        user.refreshToken = refreshToken;
+        console.log('vor dem user');
+        const accessToken = generateAccessToken(User);
+        const refreshToken = generateRefreshToken(User);
+        console.log('nach dem user');
+        User.refreshToken = refreshToken;
 
         await newUser.save();
 

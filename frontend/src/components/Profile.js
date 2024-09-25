@@ -1,11 +1,14 @@
 import React from 'react';
 import { Avatar, Typography, Button } from '@mui/material';
 import NavigationBar from './NavigationBar';
+import { jwtDecode } from 'jwt-decode';
 
 const Profile = () => {
+    let token = localStorage.getItem('accessToken');
+    const decoded = jwtDecode(token);
     const user = {
-        name: 'John Doe',
-        email: 'johndoe@example.com',
+        name: decoded.name,
+        email: decoded.email,
         // Falls kein Benutzerbild vorhanden ist, wird die Silhouette verwendet
         avatar: null // oder ein Bild-URL
     };

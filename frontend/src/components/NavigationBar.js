@@ -5,6 +5,8 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import WorkIcon from '@mui/icons-material/Work';
 import '../App.css';
+import LogoutButton from './LogoutButton';
+import Button from '@mui/material';
 
 const NavigationBar = () => {
     const navigate = useNavigate();
@@ -43,6 +45,8 @@ const NavigationBar = () => {
                 icon={<WorkIcon />}
                 style={location.pathname === '/jobs' ? { color: '#1976d2' } : {}}
             />
+            {/* Logout-Button */}
+            <LogoutButton></LogoutButton>
         </BottomNavigation>
     );
 };

@@ -6,6 +6,7 @@ const SERVICE_PORTS = {
   authentication: '5012/authentication',
   jobs: '5001/jobs', // Beispiel: Port für Job-Service
   resume: '5004/resume', // Beispiel: Port für Resume-Service
+  users: '5000/users' //Port für user (JobSeeker)
   // Weitere Services nach Bedarf hinzufügen
 };
 

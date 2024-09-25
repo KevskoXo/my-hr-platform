@@ -3,6 +3,7 @@ import createAxiosInstance from '../services/axiosInstance';
 import { TextField, Button, Typography } from '@mui/material';
 
 const JobSeekerRegister = () => {
+    const [name, setName] = useState(''); // State für den Namen
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
@@ -10,11 +11,11 @@ const JobSeekerRegister = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const axiosInstance = createAxiosInstance('authentication');
-            const response = await axiosInstance.post('/register', { email, password, role: 'jobseeker' });
+            const axiosInstance = createAxiosInstance('users');
+            const response = await axiosInstance.post('/register', { name, email, password }); // Name wird gesendet
             
-            // Registration successful, navigate to login
-            window.location.href = '/login';
+            // Registration successful, navigate to profile
+            window.location.href = '/profile';
         } catch (err) {
             setError('Registration failed');
         }
@@ -24,6 +25,14 @@ const JobSeekerRegister = () => {
         <div className="container mt-5">
             <Typography variant="h4" align="center">JobSeeker Registration</Typography>
             <form onSubmit={handleSubmit}>
+                <TextField
+                    label="Name"  // Name-Feld hinzugefügt
+                    fullWidth
+                    margin="normal"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                />
                 <TextField
                     label="Email"
                     fullWidth
