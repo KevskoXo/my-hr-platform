@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const {generateAccessToken, generateRefreshToken} = require('../utils/tokenUtils')
 
-// Recruiter erstellen
+// Recruiter erstellen  !!!!!wahrscheinlich ood!!!!!
 exports.registerRecruiter = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -24,6 +24,11 @@ exports.registerRecruiter = async (req, res) => {
             name,
             email,
             password: hashedPassword,
+            subscription: {
+                status: 'trial',
+                startDate: new Date(),
+                endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 Tage Trial
+            },
         });
 
         //JWT-Token
@@ -43,6 +48,144 @@ exports.registerRecruiter = async (req, res) => {
         });
 
         res.status(201).json({ message: 'Recruiter registered successfully' , accessToken, refreshToken});
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// superAdmin initial erstellen
+exports.registerSuperAdmin = async (req, res) => {
+    try {
+        const { name, email, password, secretToken } = req.body;
+
+        // Überprüfe das geheime Token -> später vervollständigen!
+        if (secretToken !== process.env.SUPERADMIN_SECRET) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Prüfe, ob der SuperAdmin bereits existiert
+        const existingSuperAdmin = await Recruiter.findOne({ email });
+        if (existingSuperAdmin) {
+            return res.status(400).json({ error: 'SuperAdmin already exists' });
+        }
+
+        // Passwort hashen
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Neuen SuperAdmin erstellen
+        const newSuperAdmin = new Recruiter({
+            name,
+            email,
+            password: hashedPassword,
+            role: 'superAdmin',
+            subscription: {
+                status: 'trial',
+                startDate: new Date(),
+                endDate: null,
+            },
+        });
+
+        await newSuperAdmin.save();
+
+        res.status(201).json({ message: 'SuperAdmin registered successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// admin von superAdmin anlegen lassen
+exports.createAdmin = async (req, res) => {
+    try {
+        const { name, email, password, companyName, companyInfo } = req.body;
+
+        // Überprüfen, ob der Benutzer SuperAdmin ist
+        if (req.user.role !== 'superAdmin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Prüfen, ob der Admin bereits existiert
+        const existingAdmin = await Recruiter.findOne({ email });
+        if (existingAdmin) {
+            return res.status(400).json({ error: 'Admin already exists' });
+        }
+
+        // Passwort hashen
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Neues Unternehmen erstellen
+        const company = new Company({
+            name: companyName,
+            ...companyInfo,
+        });
+        await company.save();
+
+        // Neuen Admin erstellen
+        const newAdmin = new Recruiter({
+            name,
+            email,
+            password: hashedPassword,
+            role: 'admin',
+            company: company._id,
+            subscription: {
+                status: 'active',
+                startDate: new Date(),
+                endDate: null,
+            },
+        });
+
+        await newAdmin.save();
+
+        // Admin dem Unternehmen hinzufügen
+        company.recruiters.push(newAdmin._id);
+        await company.save();
+
+        res.status(201).json({ message: 'Admin created successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// recruiter von admin oder superAdmin anlegen lassen
+exports.createRecruiter = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        // Überprüfen, ob der Benutzer Admin ist
+        if (req.user.role !== 'admin' || req.user.role !== 'superAdmin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Prüfen, ob der Recruiter bereits existiert
+        const existingRecruiter = await Recruiter.findOne({ email });
+        if (existingRecruiter) {
+            return res.status(400).json({ error: 'Recruiter already exists' });
+        }
+
+        // Passwort hashen
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Neuen Recruiter erstellen
+        const newRecruiter = new Recruiter({
+            name,
+            email,
+            password: hashedPassword,
+            role: 'recruiter',
+            company: req.user.company, // Verknüpfe mit dem Unternehmen des Admins
+            subscription: {
+                status: 'active',
+                startDate: new Date(),
+                endDate: null,
+            },
+        });
+
+        await newRecruiter.save();
+
+        // Recruiter dem Unternehmen hinzufügen
+        const company = await Company.findById(req.user.company);
+        company.recruiters.push(newRecruiter._id);
+        await company.save();
+
+        res.status(201).json({ message: 'Recruiter created successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

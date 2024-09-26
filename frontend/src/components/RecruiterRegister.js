@@ -3,19 +3,21 @@ import createAxiosInstance from '../services/axiosInstance';
 import { TextField, Button, Typography, Checkbox, FormControlLabel } from '@mui/material';
 
 const RecruiterRegister = () => {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [agreeToTrial, setAgreeToTrial] = useState(false);
     const [error, setError] = useState(null);
-    const [trial, setTrial] = useState(false); // Für 14-tägiges Probeabo
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const axiosInstance = createAxiosInstance('authentication');
-            const response = await axiosInstance.post('/register', { email, password, role: 'recruiter', trial });
+            const secretToken = 'SuperAdmin';
+            const axiosInstance = createAxiosInstance('recruiters');
+            const response = await axiosInstance.post('/register-superadmin', { name, email, password, secretToken });
             
-            // Registration successful, navigate to login
-            window.location.href = '/login';
+            // Registration successful, navigate to profile
+            window.location.href = '/recruiter/profile';
         } catch (err) {
             setError('Registration failed');
         }
@@ -25,6 +27,14 @@ const RecruiterRegister = () => {
         <div className="container mt-5">
             <Typography variant="h4" align="center">Recruiter Registration</Typography>
             <form onSubmit={handleSubmit}>
+                <TextField
+                    label="Name"
+                    fullWidth
+                    margin="normal"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                />
                 <TextField
                     label="Email"
                     fullWidth
@@ -45,9 +55,8 @@ const RecruiterRegister = () => {
                 <FormControlLabel
                     control={
                         <Checkbox
-                            checked={trial}
-                            onChange={(e) => setTrial(e.target.checked)}
-                            name="trial"
+                            checked={agreeToTrial}
+                            onChange={(e) => setAgreeToTrial(e.target.checked)}
                             color="primary"
                         />
                     }
@@ -59,6 +68,7 @@ const RecruiterRegister = () => {
                     color="primary"
                     fullWidth
                     style={{ marginTop: '20px' }}
+                    disabled={!agreeToTrial} // Button wird nur aktiviert, wenn der Recruiter dem Probeabo zustimmt
                 >
                     Register
                 </Button>

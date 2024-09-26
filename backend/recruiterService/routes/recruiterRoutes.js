@@ -8,6 +8,15 @@ const auth = require('../middleware/auth'); // Auth-Middleware importieren
 // Route zum Erstellen eines Recruiters (öffentlich)
 router.post('/register', recruiterController.registerRecruiter);
 
+// Registrierungsroute für SuperAdmin
+router.post('/register-superadmin', recruiterController.registerSuperAdmin);
+
+// Registrierungsroute für admins
+router.post('/create-admin', auth(['superAdmin']), recruiterController.createAdmin);
+
+// Registrierungsroute für recruiter
+router.post('/create-recruiter', auth(['admin']), recruiterController.createRecruiter);
+
 // Route zum Login (öffentlich)
 router.post('/login', recruiterController.loginRecruiter);
 

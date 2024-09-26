@@ -25,11 +25,23 @@ const RecruiterSchema = new mongoose.Schema({
     }],
     role: {
         type: String,
-        enum: ['user', 'recruiter'], // Erlaubte Rollen
+        enum: ['superAdmin', 'admin', 'recruiter'], // Erlaubte Rollen
         required: true,
         default: 'recruiter', // Standardrolle ist 'recruiter'
     },
     refreshToken: { type: String },
+    subscription: {
+        status: {
+            type: String,
+            enum: ['trial', 'active', 'expired'],
+            default: 'trial',
+        },
+        startDate: {
+            type: Date,
+            default: Date.now,
+        },
+        endDate: Date,
+    },
 });
 
 module.exports = mongoose.model('Recruiter', RecruiterSchema);
