@@ -1,9 +1,9 @@
 import React from 'react';
 import { Avatar, Typography, Button } from '@mui/material';
-import NavigationBar from './NavigationBar';
 import { jwtDecode } from 'jwt-decode';
+import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
 
-const Profile = () => {
+const RecruiterProfilePage = () => {
     let token = localStorage.getItem('accessToken');
     const decoded = jwtDecode(token);
     const user = {
@@ -30,10 +30,10 @@ const Profile = () => {
                     </div>
                 </div>
             }
-            <NavigationBar />
+            <RecruiterNavigationBar />
         </div>
     );
 };
 
 
-export default Profile;
+export default RecruiterProfilePage;

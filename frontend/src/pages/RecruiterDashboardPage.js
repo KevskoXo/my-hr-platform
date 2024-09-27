@@ -1,7 +1,7 @@
 import React from 'react';
-import RecruiterNavigationBar from './RecruiterNavigationBar';
+import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
 
-const RecruiterDashboard = () => {
+const RecruiterDashboardPage = () => {
     return (
         <div>
             <h1>Recruiter Dashboard</h1>
@@ -11,4 +11,4 @@ const RecruiterDashboard = () => {
     );
 };
 
-export default RecruiterDashboard;
+export default RecruiterDashboardPage;

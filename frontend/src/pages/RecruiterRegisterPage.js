@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import createAxiosInstance from '../services/axiosInstance';
 import { TextField, Button, Typography, Checkbox, FormControlLabel } from '@mui/material';
 
-const RecruiterRegister = () => {
+const RecruiterRegisterPage = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -78,4 +78,4 @@ const RecruiterRegister = () => {
     );
 };
 
-export default RecruiterRegister;
+export default RecruiterRegisterPage;

@@ -1,7 +1,7 @@
 import React from 'react';
-import NavigationBar from './NavigationBar';
+import NavigationBar from '../components/NavigationBar';
     
-    const Dashboard = () => {
+    const JobSeekerDashboardPage = () => {
         return (
             <div>
                 <h1>Dashboard</h1>
@@ -11,4 +11,4 @@ import NavigationBar from './NavigationBar';
         );
     };
     
-export default Dashboard;
+export default JobSeekerDashboardPage;

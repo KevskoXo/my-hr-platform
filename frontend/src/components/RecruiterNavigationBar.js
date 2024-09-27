@@ -41,7 +41,7 @@ const RecruiterNavigationBar = () => {
             />
             <BottomNavigationAction
                 label="Company"
-                value="/company"
+                value="/recruiter/company"
                 icon={<BusinessIcon />} // Neues Icon für Company
                 style={location.pathname === '/company' ? { color: '#1976d2' } : {}}
             />

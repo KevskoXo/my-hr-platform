@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import createAxiosInstance from '../services/axiosInstance';
 import { Typography, Button } from '@mui/material';
-import NavigationBar from './NavigationBar';
+import NavigationBar from '../components/NavigationBar';
 
-const Jobs = () => {
+const JobSeekerJobsPage = () => {
     const [jobs, setJobs] = useState([]);
     const axiosInstance = createAxiosInstance('jobs');
     useEffect(() => {
@@ -42,4 +42,4 @@ const Jobs = () => {
     );
 };
 
-export default Jobs;
+export default JobSeekerJobsPage;

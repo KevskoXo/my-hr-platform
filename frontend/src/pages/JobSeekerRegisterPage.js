@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import createAxiosInstance from '../services/axiosInstance';
 import { TextField, Button, Typography } from '@mui/material';
 
-const JobSeekerRegister = () => {
+const JobSeekerRegisterPage = () => {
     const [name, setName] = useState(''); // State für den Namen
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -65,4 +65,4 @@ const JobSeekerRegister = () => {
     );
 };
 
-export default JobSeekerRegister;
+export default JobSeekerRegisterPage;
