@@ -10,7 +10,8 @@ const RecruiterProfilePage = () => {
         name: decoded.name,
         email: decoded.email,
         // Falls kein Benutzerbild vorhanden ist, wird die Silhouette verwendet
-        avatar: null // oder ein Bild-URL
+        avatar: null, // oder ein Bild-URL
+        role: localStorage.getItem('role') //ändern zur richtigen rolle
     };
 
     return (
@@ -27,6 +28,7 @@ const RecruiterProfilePage = () => {
                         />
                         <Typography variant="h6" style={{ marginTop: '20px' }}>{user.name}</Typography>
                         <Typography variant="body1">{user.email}</Typography>
+                        <Typography variant="body1">{user.role}</Typography>
                     </div>
                 </div>
             }

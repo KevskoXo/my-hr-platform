@@ -20,15 +20,18 @@ function App() {
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/" element={<Navigate to="/login" />} />
+                
                 <Route path="/register" element={<RoleSelection />} />
                 <Route path="/register/jobseeker" element={<JobSeekerRegisterPage />} />
-                <Route path="/register/recruiter" element={<RecruiterRegisterPage />} />               
+                <Route path="/register/recruiter" element={<RecruiterRegisterPage />} />         
+
                 <Route path="/dashboard" element={<ProtectedRoute role="user"><JobSeekerDashboardPage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute role="user"><JobSeekerProfilePage /></ProtectedRoute>} />
+                <Route path="/jobs" element={<ProtectedRoute><JobSeekerJobsPage /></ProtectedRoute>} />
+
                 <Route path="/recruiter/dashboard" element={<ProtectedRoute role="recruiter"><RecruiterDashboardPage /></ProtectedRoute>} />
                 <Route path="/recruiter/profile" element={<ProtectedRoute role="recruiter"><RecruiterProfilePage /></ProtectedRoute>} />
                 <Route path="/recruiter/company" element={<ProtectedRoute role="recruiter"><RecruiterCompanyPage /></ProtectedRoute>} />
-                <Route path="/jobs" element={<ProtectedRoute><JobSeekerJobsPage /></ProtectedRoute>} />
             </Routes>
         </Router>
     );
