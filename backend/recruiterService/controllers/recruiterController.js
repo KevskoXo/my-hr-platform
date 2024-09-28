@@ -53,12 +53,12 @@ exports.registerRecruiter = async (req, res) => {
     }
 };
 
-// superAdmin initial erstellen
+// superAdmin initial erstellen und Firma referenzieren
 exports.registerSuperAdmin = async (req, res) => {
     try {
-        const { name, email, password, secretToken } = req.body;
+        const { name, email, password, secretToken, companyId } = req.body;
 
-        // Überprüfe das geheime Token -> später vervollständigen!
+        // Überprüfe das geheime Token
         if (secretToken !== process.env.SUPERADMIN_SECRET) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
@@ -72,12 +72,13 @@ exports.registerSuperAdmin = async (req, res) => {
         // Passwort hashen
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Neuen SuperAdmin erstellen
+        // Neuen SuperAdmin erstellen und mit Firma verknüpfen
         const newSuperAdmin = new Recruiter({
             name,
             email,
             password: hashedPassword,
             role: 'superAdmin',
+            company: companyId, // Referenz auf die vom CompanyService erstellte Firma
             subscription: {
                 status: 'trial',
                 startDate: new Date(),
@@ -93,10 +94,11 @@ exports.registerSuperAdmin = async (req, res) => {
     }
 };
 
-// admin von superAdmin anlegen lassen
+
+// Admin von SuperAdmin anlegen lassen
 exports.createAdmin = async (req, res) => {
     try {
-        const { name, email, password, companyName, companyInfo } = req.body;
+        const { name, email, password } = req.body;
 
         // Überprüfen, ob der Benutzer SuperAdmin ist
         if (req.user.role !== 'superAdmin') {
@@ -112,20 +114,14 @@ exports.createAdmin = async (req, res) => {
         // Passwort hashen
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Neues Unternehmen erstellen
-        const company = new Company({
-            name: companyName,
-            ...companyInfo,
-        });
-        await company.save();
-
-        // Neuen Admin erstellen
+        // Neuen Admin erstellen, Firma referenzieren und SuperAdmin als Vorgesetzten festlegen
         const newAdmin = new Recruiter({
             name,
             email,
             password: hashedPassword,
             role: 'admin',
-            company: company._id,
+            company: req.user.company, // Firma vom SuperAdmin übernehmen
+            supervisor: req.user._id, // SuperAdmin als Vorgesetzten festlegen
             subscription: {
                 status: 'active',
                 startDate: new Date(),
@@ -135,23 +131,20 @@ exports.createAdmin = async (req, res) => {
 
         await newAdmin.save();
 
-        // Admin dem Unternehmen hinzufügen
-        company.recruiters.push(newAdmin._id);
-        await company.save();
-
         res.status(201).json({ message: 'Admin created successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-// recruiter von admin oder superAdmin anlegen lassen
+
+// Recruiter von Admin oder SuperAdmin anlegen lassen
 exports.createRecruiter = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-        // Überprüfen, ob der Benutzer Admin ist
-        if (req.user.role !== 'admin' || req.user.role !== 'superAdmin') {
+        // Überprüfen, ob der Benutzer Admin oder SuperAdmin ist
+        if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -164,13 +157,14 @@ exports.createRecruiter = async (req, res) => {
         // Passwort hashen
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Neuen Recruiter erstellen
+        // Neuen Recruiter erstellen, Firma referenzieren und Vorgesetzten festlegen
         const newRecruiter = new Recruiter({
             name,
             email,
             password: hashedPassword,
             role: 'recruiter',
-            company: req.user.company, // Verknüpfe mit dem Unternehmen des Admins
+            company: req.user.company, // Firma übernehmen
+            supervisor: req.user._id, // Admin oder SuperAdmin als Vorgesetzten festlegen
             subscription: {
                 status: 'active',
                 startDate: new Date(),
@@ -180,16 +174,74 @@ exports.createRecruiter = async (req, res) => {
 
         await newRecruiter.save();
 
-        // Recruiter dem Unternehmen hinzufügen
-        const company = await Company.findById(req.user.company);
-        company.recruiters.push(newRecruiter._id);
-        await company.save();
-
         res.status(201).json({ message: 'Recruiter created successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
+
+
+exports.getRecruiterHierarchy = async (req, res) => {
+    try {
+        const recruiterId = req.user.userId;
+        const companyId = req.user.company;
+        let hierarchyData;
+
+        if (req.user.role === 'superAdmin') {
+            // SuperAdmin sieht die gesamte Firmenhierarchie ab dem SuperAdmin
+            hierarchyData = await buildHierarchy(recruiterId, companyId);
+        } else if (req.user.role === 'admin' || req.user.role === 'recruiter') {
+            // Admins und Recruiter sehen ihre eigene Hierarchie
+            hierarchyData = await buildHierarchy(recruiterId, companyId);
+        } else {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        res.json(hierarchyData);
+    } catch (error) {
+        console.error('Error fetching recruiter hierarchy:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+
+async function buildHierarchy(recruiterId, companyId, visited = new Set()) {
+    // Wenn der Recruiter bereits besucht wurde, vermeiden wir eine Endlosschleife
+    if (visited.has(recruiterId.toString())) {
+        return null;
+    }
+    visited.add(recruiterId.toString());
+
+    // Aktuellen Recruiter abrufen
+    const recruiter = await Recruiter.findOne({ _id: recruiterId, company: companyId })
+        .select('name role avatar')
+        .lean();
+
+    if (!recruiter) {
+        return null;
+    }
+
+    // Untergeordnete Recruiter abrufen
+    const subordinates = await Recruiter.find({ supervisor: recruiterId, company: companyId })
+        .select('_id')
+        .lean();
+
+    // Rekursiv die Hierarchie der Untergeordneten aufbauen
+    const childrenPromises = subordinates.map(subordinate =>
+        buildHierarchy(subordinate._id, companyId, visited)
+    );
+    const children = (await Promise.all(childrenPromises)).filter(child => child !== null);
+
+    return {
+        ...recruiter,
+        _id: recruiter._id.toString(), // Stellen Sie sicher, dass die ID eine Zeichenkette ist
+        children,
+    };
+}
+
+
+
 
 // Recruiter nach ID abrufen
 exports.getRecruiterById = async (req, res) => {
@@ -262,13 +314,37 @@ exports.loginRecruiter = async (req, res) => {
     }
 };
 
-// geschützte route get profile
+//// geschützte route get profile
+//exports.getRecruiterProfile = async (req, res) => {
+//    try {
+//        const recruiter = await Recruiter.findById(req.user.recruiterId).select('-password');
+//        res.json(recruiter);
+//    } catch (error) {
+//        res.status(500).json({ error: error.message });
+//    }
+//};
+
+// controllers/recruiterController.js
+
 exports.getRecruiterProfile = async (req, res) => {
     try {
-        const recruiter = await Recruiter.findById(req.user.recruiterId).select('-password');
+        const recruiterId = req.user.userId;
+
+        // Überprüfen, ob der angemeldete Benutzer auf dieses Profil zugreifen darf
+        if (req.user.id !== recruiterId && req.user.role !== 'superAdmin') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const recruiter = await Recruiter.findById(recruiterId).select('name email role avatar').lean();
+
+        if (!recruiter) {
+            return res.status(404).json({ error: 'Recruiter not found' });
+        }
+
         res.json(recruiter);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Fehler beim Abrufen des Recruiter-Profils:', error);
+        res.status(500).json({ error: 'Serverfehler' });
     }
 };
 
@@ -338,9 +414,10 @@ exports.authenticateRecruiter = async (req, res) => {
       // Recruiterinformationen zurückgeben
       res.json({
         userId: recruiter._id,
-        role: 'recruiter',
+        role: recruiter.role,
         name: recruiter.name,
         email: recruiter.email,
+        company: recruiter.company
       });
     } catch (err) {
       res.status(500).json({ error: 'Serverfehler' });

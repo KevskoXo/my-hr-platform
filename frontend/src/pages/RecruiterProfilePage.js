@@ -1,41 +1,46 @@
-import React from 'react';
-import { Avatar, Typography, Button } from '@mui/material';
-import { jwtDecode } from 'jwt-decode';
-import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
+// pages/RecruiterProfilePage.js
+
+import React, { useEffect, useState } from 'react';
+import { Typography, Avatar, Box } from '@mui/material';
+import HierarchyTreeView from '../components/HierarchyTreeView';
+import createAxiosInstance from '../services/axiosInstance';
 
 const RecruiterProfilePage = () => {
-    let token = localStorage.getItem('accessToken');
-    const decoded = jwtDecode(token);
-    const user = {
-        name: decoded.name,
-        email: decoded.email,
-        // Falls kein Benutzerbild vorhanden ist, wird die Silhouette verwendet
-        avatar: null, // oder ein Bild-URL
-        role: localStorage.getItem('role') //ändern zur richtigen rolle
-    };
+    const [hierarchyData, setHierarchyData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const axiosInstance = createAxiosInstance('recruiters');
+    const token = localStorage.getItem('accessToken');
+
+    useEffect(() => {
+        const fetchHierarchyData = async () => {
+            try {
+                const response = await axiosInstance.get('/hierarchy', {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                setHierarchyData(response.data);
+            } catch (error) {
+                console.error('Fehler beim Abrufen der Hierarchie-Daten:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchHierarchyData();
+    }, [axiosInstance]);
+
+    if (loading) return <Typography>Lade Hierarchie...</Typography>;
+    if (!hierarchyData) return <Typography>Keine Hierarchiedaten verfügbar.</Typography>;
 
     return (
-        <div>
-            <h1>Profile</h1>
-            {
-                    <div className="container mt-5">
-                    <Typography variant="h4" component="h2" align="center">User Profile</Typography>
-                    <div className="mt-4 d-flex flex-column align-items-center">
-                        <Avatar
-                            alt={user.name}
-                            src={user.avatar}
-                            style={{ width: 100, height: 100 }}
-                        />
-                        <Typography variant="h6" style={{ marginTop: '20px' }}>{user.name}</Typography>
-                        <Typography variant="body1">{user.email}</Typography>
-                        <Typography variant="body1">{user.role}</Typography>
-                    </div>
-                </div>
-            }
-            <RecruiterNavigationBar />
-        </div>
+        <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" gutterBottom>
+                Organisatorische Hierarchie
+            </Typography>
+            <HierarchyTreeView hierarchyData={hierarchyData} />
+        </Box>
     );
 };
-
 
 export default RecruiterProfilePage;

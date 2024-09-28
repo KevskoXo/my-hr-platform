@@ -42,6 +42,12 @@ const RecruiterSchema = new mongoose.Schema({
         },
         endDate: Date,
     },
+    supervisor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Recruiter', // Verweis auf das gleiche Modell
+        default: null,
+    },
+    avatar: { type: String, default: null }, // Neues Feld für das Avatar-Bild,
 });
 
 module.exports = mongoose.model('Recruiter', RecruiterSchema);

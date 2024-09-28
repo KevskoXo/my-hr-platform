@@ -25,13 +25,13 @@ function App() {
                 <Route path="/register/jobseeker" element={<JobSeekerRegisterPage />} />
                 <Route path="/register/recruiter" element={<RecruiterRegisterPage />} />         
 
-                <Route path="/dashboard" element={<ProtectedRoute role="user"><JobSeekerDashboardPage /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute role="user"><JobSeekerProfilePage /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["user"]}><JobSeekerDashboardPage /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute allowedRoles={["user"]}><JobSeekerProfilePage /></ProtectedRoute>} />
                 <Route path="/jobs" element={<ProtectedRoute><JobSeekerJobsPage /></ProtectedRoute>} />
 
-                <Route path="/recruiter/dashboard" element={<ProtectedRoute role="recruiter"><RecruiterDashboardPage /></ProtectedRoute>} />
-                <Route path="/recruiter/profile" element={<ProtectedRoute role="recruiter"><RecruiterProfilePage /></ProtectedRoute>} />
-                <Route path="/recruiter/company" element={<ProtectedRoute role="recruiter"><RecruiterCompanyPage /></ProtectedRoute>} />
+                <Route path="/recruiter/dashboard" element={<ProtectedRoute allowedRoles={['recruiter', 'admin', 'superAdmin']}><RecruiterDashboardPage /></ProtectedRoute>} />
+                <Route path="/recruiter/profile" element={<ProtectedRoute allowedRoles={['recruiter', 'admin', 'superAdmin']}><RecruiterProfilePage /></ProtectedRoute>} />
+                <Route path="/recruiter/company" element={<ProtectedRoute allowedRoles={['recruiter', 'admin', 'superAdmin']}><RecruiterCompanyPage /></ProtectedRoute>} />
             </Routes>
         </Router>
     );

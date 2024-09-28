@@ -1,19 +1,28 @@
-// utils/tokenUtils.js
+// authenticationService/utils/tokenUtils.js
 const jwt = require('jsonwebtoken');
 
-const generateAccessToken = (recruiter) => {
+const generateAccessToken = (userData) => {
   return jwt.sign(
-    { recruiterId: recruiter._id, role: recruiter.role },
+    {
+      userId: userData.userId,
+      role: userData.role,
+      name: userData.name,
+      email: userData.email,
+      company: userData.company
+    },
     process.env.JWT_SECRET,
-    { expiresIn: '15m' } // Access Token mit kurzer Gültigkeit
+    { expiresIn: process.env.JWT_EXPIRES_IN }
   );
 };
 
-const generateRefreshToken = (recruiter) => {
+const generateRefreshToken = (userData) => {
   return jwt.sign(
-    { recruiterId: recruiter._id, role: recruiter.role },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: '7d' } // Refresh Token mit längerer Gültigkeit
+    {
+      userId: userData.userId,
+      role: userData.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN }
   );
 };
 
