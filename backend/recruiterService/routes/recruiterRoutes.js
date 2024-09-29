@@ -41,4 +41,6 @@ router.get('/hierarchy', auth(['superAdmin', 'admin', 'recruiter']), recruiterCo
 // Route zum Abrufen eines Recruiters nach ID (öffentlich)
 router.get('/:id', recruiterController.getRecruiterById);
 
+router.put('/:id/supervisor', auth(['superAdmin']), updateSupervisor);
+
 module.exports = router;

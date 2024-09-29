@@ -440,3 +440,36 @@ exports.authenticateRecruiter = async (req, res) => {
     }
   };
   
+
+  // Supervisor ändern
+  exports.updateSupervisor = async (req, res) => {
+    try {
+      const recruiterId = req.params.id;
+      const { supervisor } = req.body;
+  
+      // Überprüfen Sie, ob der Benutzer berechtigt ist
+      if (req.user.role !== 'superAdmin') {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+  
+      // Validierung: Verhindern Sie Zyklen in der Hierarchie
+      if (await createsCycle(recruiterId, supervisor)) {
+        return res.status(400).json({ error: 'Cannot assign supervisor due to cycle' });
+      }
+  
+      await Recruiter.findByIdAndUpdate(recruiterId, { supervisor });
+  
+      res.json({ message: 'Supervisor updated successfully' });
+    } catch (error) {
+      console.error('Error updating supervisor:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  };
+  
+  // Hilfsfunktion zur Zykluserkennung
+  const createsCycle = async (recruiterId, supervisorId) => {
+    // Implementieren Sie die Logik, um zu überprüfen, ob ein Zyklus entstehen würde
+    // Z.B. könnten Sie die Vorgesetztenkette bis zum Wurzelknoten durchlaufen
+    // und prüfen, ob recruiterId irgendwo in der Kette vorkommt
+  };
+  
