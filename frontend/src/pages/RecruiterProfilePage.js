@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Typography, Box } from '@mui/material';
 import HierarchyTreeView from '../components/HierarchyTreeView';
 import createAxiosInstance from '../services/axiosInstance';
-
+import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
 
 const RecruiterProfilePage = () => {
     const [hierarchyData, setHierarchyData] = useState(null);
@@ -40,6 +40,7 @@ const RecruiterProfilePage = () => {
                 Organisatorische Hierarchie
             </Typography>
             <HierarchyTreeView hierarchyData={hierarchyData} />
+            <RecruiterNavigationBar/>
         </Box>
     );
 };
