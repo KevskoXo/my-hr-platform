@@ -1,24 +1,35 @@
-// components/HierarchyTreeView.js
-
 import React from 'react';
 import { Typography } from '@mui/material';
-import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
+import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
+import CustomTreeItem from './CustomTreeItem';
+import { ExpandMore, ChevronRight } from '@mui/icons-material';
 
 const HierarchyTreeView = ({ hierarchyData }) => {
+  const renderTree = (node) => (
+    <CustomTreeItem
+      key={node._id.toString()}
+      itemId={node._id.toString()}
+      nodeData={node}
+    >
+      {Array.isArray(node.children) && node.children.length > 0
+        ? node.children.map((child) => renderTree(child))
+        : null}
+    </CustomTreeItem>
+  );
 
-    const renderTreeItems = (node) => ({
-        id: node._id.toString(),
-        label: `${node.role}: ${node.name}`,
-        children: node.children ? node.children.map(renderTreeItems) : [],
-    });
+  if (!hierarchyData) return <Typography>Keine Hierarchiedaten verfügbar.</Typography>;
 
-    if (!hierarchyData) return <Typography>Keine Hierarchiedaten verfügbar.</Typography>;
-
-    const treeItems = [renderTreeItems(hierarchyData)];
-
-    return (
-        <RichTreeView items={treeItems} />
-    );
+  return (
+    <SimpleTreeView
+      defaultExpandedItems={[hierarchyData._id.toString()]}
+      slots={{
+        collapseIcon: <ExpandMore />,
+        expandIcon: <ChevronRight />,
+      }}
+    >
+      {renderTree(hierarchyData)}
+    </SimpleTreeView>
+  );
 };
 
 export default HierarchyTreeView;
