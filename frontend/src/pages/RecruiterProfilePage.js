@@ -35,6 +35,9 @@ const RecruiterProfilePage = () => {
     if (!hierarchyData) return <Typography>Keine Hierarchiedaten verfügbar.</Typography>;
 
     return (
+        <div>
+        <h1>Recruiter Profile</h1>
+        <h2>Manage Recruiter</h2>
         <Box sx={{ mt: 4 }}>
             <Typography variant="h5" gutterBottom>
                 Organisatorische Hierarchie
@@ -42,6 +45,7 @@ const RecruiterProfilePage = () => {
             <HierarchyTreeView hierarchyData={hierarchyData} />
             <RecruiterNavigationBar/>
         </Box>
+        </div>
     );
 };
 
