@@ -186,14 +186,18 @@ exports.getRecruiterHierarchy = async (req, res) => {
     try {
         const recruiterId = req.user.userId;
         const companyId = req.user.company;
+        const role = req.user.role;
         let hierarchyData;
 
-        if (req.user.role === 'superAdmin') {
-            // SuperAdmin sieht die gesamte Firmenhierarchie ab dem SuperAdmin
-            hierarchyData = await buildHierarchy(recruiterId, companyId);
-        } else if (req.user.role === 'admin' || req.user.role === 'recruiter') {
-            // Admins und Recruiter sehen ihre eigene Hierarchie
-            hierarchyData = await buildHierarchy(recruiterId, companyId);
+        if (role === 'superAdmin') {
+            // SuperAdmin sieht alle unter sich
+            hierarchyData = await buildHierarchy(recruiterId, companyId, role);
+        } else if (role === 'admin') {
+            // Admin sieht seinen SuperAdmin und alle unter sich
+            hierarchyData = await buildHierarchy(recruiterId, companyId, role, true);
+        } else if (role === 'recruiter') {
+            // Recruiter sieht seinen Admin (und optional SuperAdmin)
+            hierarchyData = await buildHierarchy(recruiterId, companyId, role, true);
         } else {
             return res.status(403).json({ error: 'Unauthorized' });
         }
@@ -206,8 +210,9 @@ exports.getRecruiterHierarchy = async (req, res) => {
 };
 
 
-async function buildHierarchy(recruiterId, companyId, visited = new Set()) {
-    // Wenn der Recruiter bereits besucht wurde, vermeiden wir eine Endlosschleife
+
+async function buildHierarchy(recruiterId, companyId, role, includeSupervisors = false, visited = new Set()) {
+    // Vermeidung von Endlosschleifen durch Zyklus-Erkennung
     if (visited.has(recruiterId.toString())) {
         return null;
     }
@@ -215,31 +220,42 @@ async function buildHierarchy(recruiterId, companyId, visited = new Set()) {
 
     // Aktuellen Recruiter abrufen
     const recruiter = await Recruiter.findOne({ _id: recruiterId, company: companyId })
-        .select('name role avatar')
+        .select('name role avatar supervisor')
         .lean();
 
     if (!recruiter) {
         return null;
     }
 
-    // Untergeordnete Recruiter abrufen
-    const subordinates = await Recruiter.find({ supervisor: recruiterId, company: companyId })
-        .select('_id')
-        .lean();
+    // Untergeordnete Recruiter abrufen (nur wenn Rolle nicht 'recruiter')
+    let subordinates = [];
+    if (role !== 'recruiter') {
+        subordinates = await Recruiter.find({ supervisor: recruiterId, company: companyId })
+            .select('_id')
+            .lean();
+    }
 
     // Rekursiv die Hierarchie der Untergeordneten aufbauen
     const childrenPromises = subordinates.map(subordinate =>
-        buildHierarchy(subordinate._id, companyId, visited)
+        buildHierarchy(subordinate._id, companyId, role, false, visited)
     );
-    const children = (await Promise.all(childrenPromises)).filter(child => child !== null);
+    let children = (await Promise.all(childrenPromises)).filter(child => child !== null);
+
+    // Wenn includeSupervisors true ist, fügen wir den Vorgesetzten hinzu
+    if (includeSupervisors && recruiter.supervisor) {
+        const supervisorHierarchy = await buildHierarchy(recruiter.supervisor, companyId, role, true, visited);
+        if (supervisorHierarchy) {
+            // Der Vorgesetzte wird an den Anfang der Kinderliste gesetzt
+            children = [supervisorHierarchy, ...children];
+        }
+    }
 
     return {
         ...recruiter,
-        _id: recruiter._id.toString(), // Stellen Sie sicher, dass die ID eine Zeichenkette ist
+        _id: recruiter._id.toString(), // IDs als Strings
         children,
     };
 }
-
 
 
 

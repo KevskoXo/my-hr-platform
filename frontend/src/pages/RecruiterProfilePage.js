@@ -1,9 +1,10 @@
 // pages/RecruiterProfilePage.js
 
 import React, { useEffect, useState } from 'react';
-import { Typography, Avatar, Box } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import HierarchyTreeView from '../components/HierarchyTreeView';
 import createAxiosInstance from '../services/axiosInstance';
+
 
 const RecruiterProfilePage = () => {
     const [hierarchyData, setHierarchyData] = useState(null);
