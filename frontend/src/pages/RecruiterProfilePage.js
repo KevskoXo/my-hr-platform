@@ -5,6 +5,8 @@ import { Typography, Box } from '@mui/material';
 import HierarchyTreeView from '../components/HierarchyTreeView';
 import createAxiosInstance from '../services/axiosInstance';
 import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const RecruiterProfilePage = () => {
     const [hierarchyData, setHierarchyData] = useState(null);
@@ -35,17 +37,19 @@ const RecruiterProfilePage = () => {
     if (!hierarchyData) return <Typography>Keine Hierarchiedaten verfügbar.</Typography>;
 
     return (
-        <div>
-        <h1>Recruiter Profile</h1>
-        <h2>Manage Recruiter</h2>
-        <Box sx={{ mt: 4 }}>
-            <Typography variant="h5" gutterBottom>
-                Organisatorische Hierarchie
-            </Typography>
-            <HierarchyTreeView hierarchyData={hierarchyData} />
-            <RecruiterNavigationBar/>
-        </Box>
-        </div>
+        <DndProvider backend={HTML5Backend}>
+            <div>
+                <h1>Recruiter Profile</h1>
+                <h2>Manage Recruiter</h2>
+                <Box sx={{ mt: 4 }}>
+                    <Typography variant="h5" gutterBottom>
+                        Organisatorische Hierarchie
+                    </Typography>
+                    <HierarchyTreeView hierarchyData={hierarchyData} />
+                    <RecruiterNavigationBar/>
+                </Box>
+            </div>
+        </DndProvider>
     );
 };
 
