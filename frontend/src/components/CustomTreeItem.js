@@ -126,12 +126,13 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(props, ref) {
               alignItems: 'center',
               gap: 1,
               cursor: 'pointer',
+              padding: '2px',
               backgroundColor: isOver && canDrop ? 'rgba(0, 0, 255, 0.1)' : 'transparent',
             }}
             onClick={handleItemClick}
           >
             <Avatar
-              sx={{ width: 40, height: 40 }}
+              sx={{ width: 50, height: 50 }}
               src={nodeData.avatar}
             >
               {!nodeData.avatar && nodeData.name.charAt(0)}
@@ -141,7 +142,10 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(props, ref) {
             </Typography>
           </Box>
         </CustomTreeItemContent>
-        {children && <TreeItem2GroupTransition {...getGroupTransitionProps()} />}
+        {children && <TreeItem2GroupTransition {...getGroupTransitionProps()} 
+            sx={{
+              marginLeft: 4, // Abstand von Admin zu den Recruiter-Elementen (oder anderen gewünschten Wert)
+            }}/>}
       </TreeItem2Root>
     </TreeItem2Provider>
   );
