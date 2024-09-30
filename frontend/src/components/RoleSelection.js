@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Typography, Box, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'; // Beispiel-Icon für JobSeeker
 import BusinessIcon from '@mui/icons-material/Business'; // Beispiel-Icon für Recruiter
+import BackButton from './BackButton';
 
 const RoleSelection = () => {
     const navigate = useNavigate();
@@ -56,6 +57,7 @@ const RoleSelection = () => {
                     </Typography>
                 </Box>
             </Box>
+            <BackButton/>
         </div>
     );
 };

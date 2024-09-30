@@ -7,6 +7,7 @@ import createAxiosInstance from '../services/axiosInstance';
 import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import AvatarPlusIcon from '../components/AvatarPlusIcon';
 
 const RecruiterProfilePage = () => {
     const [hierarchyData, setHierarchyData] = useState(null);
@@ -48,6 +49,7 @@ const RecruiterProfilePage = () => {
                     <HierarchyTreeView hierarchyData={hierarchyData} />
                     <RecruiterNavigationBar/>
                 </Box>
+                <AvatarPlusIcon userRole={localStorage.getItem('role')}/>
             </div>
         </DndProvider>
     );

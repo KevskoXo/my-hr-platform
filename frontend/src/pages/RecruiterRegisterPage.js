@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import createAxiosInstance from '../services/axiosInstance';
 import { TextField, Button, Typography, Checkbox, FormControlLabel } from '@mui/material';
+import BackButton from '../components/BackButton';
 
 const RecruiterRegisterPage = () => {
     const [name, setName] = useState('');
@@ -74,6 +75,7 @@ const RecruiterRegisterPage = () => {
                 </Button>
                 {error && <Typography color="error" align="center">{error}</Typography>}
             </form>
+            <BackButton/>
         </div>
     );
 };
