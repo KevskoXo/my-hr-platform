@@ -13,26 +13,35 @@ exports.addCompany = async (req, res) => {
     }
 };
 
-// Alle Unternehmen abrufen
+
+// Controller zum Abrufen aller Firmen
 exports.getAllCompanies = async (req, res) => {
     try {
-        const companies = await Company.find().populate('recruiters');
-        res.status(200).json(companies);
+        const companies = await Company.find().select('name shortDescription logoUrl').lean();
+        res.json(companies);
     } catch (error) {
-        res.status(400).json({ message: 'Error fetching companies', error });
+        console.error('Error fetching companies:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
-// Ein bestimmtes Unternehmen anhand der ID abrufen
+
+// Controller zum Abrufen einer Firma basierend auf der ID
 exports.getCompanyById = async (req, res) => {
     try {
-        const company = await Company.findById(req.params.id).populate('recruiters');
+        const companyId = req.params.id;
+        const company = await Company.findById(companyId)
+            .select('name shortDescription longDescription logoUrl')
+            .lean();
+
         if (!company) {
-            return res.status(404).json({ message: 'Company not found' });
+            return res.status(404).json({ error: 'Company not found' });
         }
-        res.status(200).json(company);
+
+        res.json(company);
     } catch (error) {
-        res.status(400).json({ message: 'Error fetching company', error });
+        console.error('Error fetching company:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 };
 

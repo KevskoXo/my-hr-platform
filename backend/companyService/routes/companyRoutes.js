@@ -7,11 +7,11 @@ const auth = require('../middleware/auth'); // Auth-Middleware importieren
 // Route zum Anlegen eines neuen Unternehmens (nur für Recruiter)
 router.post('/add', auth(['recruiter']), companyController.addCompany);
 
+// Route zum Abrufen eines bestimmten Unternehmens anhand der ID (für alle)
+router.get('/:id', auth(['recruiter', 'admin', 'superAdmin']), companyController.getCompanyById);
+
 // Route zum Abrufen aller Unternehmen (für alle)
 router.get('/', companyController.getAllCompanies);
-
-// Route zum Abrufen eines bestimmten Unternehmens anhand der ID (für alle)
-router.get('/:id', companyController.getCompanyById);
 
 // Route zum Aktualisieren eines Unternehmens (nur für Recruiter)
 router.put('/:id', auth(['recruiter']), companyController.updateCompany);

@@ -14,16 +14,15 @@ const CompanySchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    description: {
+    shortDescription: {
+        type: String,
+    },
+    longDescription: {
         type: String,
     },
     logoUrl: {
         type: String,
     },
-    recruiters: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Recruiter'
-    }]
 });
 
 module.exports = mongoose.model('Company', CompanySchema);
