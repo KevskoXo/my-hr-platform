@@ -8,12 +8,16 @@ import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import AvatarPlusIcon from '../components/AvatarPlusIcon';
+import SupervisorAvatar from '../components/SupervisorAvatar';
 
 const RecruiterProfilePage = () => {
     const [hierarchyData, setHierarchyData] = useState(null);
     const [loading, setLoading] = useState(true);
     const axiosInstance = createAxiosInstance('recruiters');
     const token = localStorage.getItem('accessToken');
+
+    
+
 
     useEffect(() => {
         const fetchHierarchyData = async () => {
@@ -46,6 +50,8 @@ const RecruiterProfilePage = () => {
                     <Typography variant="h5" gutterBottom>
                         Organisatorische Hierarchie
                     </Typography>
+                    {localStorage.getItem('role') === 'admin' && <SupervisorAvatar/>}
+                    {localStorage.getItem('role') === 'recruiter' && <SupervisorAvatar/>}
                     <HierarchyTreeView hierarchyData={hierarchyData} />
                     <RecruiterNavigationBar/>
                 </Box>

@@ -182,7 +182,6 @@ exports.createRecruiter = async (req, res) => {
 };
 
 
-
 exports.getRecruiterHierarchy = async (req, res) => {
     try {
         const recruiterId = req.user.userId;
@@ -194,11 +193,11 @@ exports.getRecruiterHierarchy = async (req, res) => {
             // SuperAdmin sieht alle unter sich
             hierarchyData = await buildHierarchy(recruiterId, companyId, role);
         } else if (role === 'admin') {
-            // Admin sieht seinen SuperAdmin und alle unter sich
-            hierarchyData = await buildHierarchy(recruiterId, companyId, role, true);
+            // Admin sieht alle unter sich, aber nicht seine Vorgesetzten
+            hierarchyData = await buildHierarchy(recruiterId, companyId, role, false);
         } else if (role === 'recruiter') {
-            // Recruiter sieht seinen Admin (und optional SuperAdmin)
-            hierarchyData = await buildHierarchy(recruiterId, companyId, role, true);
+            // Recruiter sieht nur sich selbst
+            hierarchyData = await buildHierarchy(recruiterId, companyId, role, false);
         } else {
             return res.status(403).json({ error: 'Unauthorized' });
         }
@@ -209,6 +208,7 @@ exports.getRecruiterHierarchy = async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
 
 
 
@@ -242,8 +242,8 @@ async function buildHierarchy(recruiterId, companyId, role, includeSupervisors =
     );
     let children = (await Promise.all(childrenPromises)).filter(child => child !== null);
 
-    // Wenn includeSupervisors true ist, fügen wir den Vorgesetzten hinzu
-    if (includeSupervisors && recruiter.supervisor) {
+    // Nur für SuperAdmins: Wenn includeSupervisors true ist, fügen wir den Vorgesetzten hinzu
+    if (includeSupervisors && role === 'superAdmin' && recruiter.supervisor) {
         const supervisorHierarchy = await buildHierarchy(recruiter.supervisor, companyId, role, true, visited);
         if (supervisorHierarchy) {
             // Der Vorgesetzte wird an den Anfang der Kinderliste gesetzt
@@ -480,3 +480,24 @@ const createsCycle = async (recruiterId, supervisorId) => {
   // Z.B. könnten Sie die Vorgesetztenkette bis zum Wurzelknoten durchlaufen
   // und prüfen, ob recruiterId irgendwo in der Kette vorkommt
 };
+
+
+// Backend: Hole den Supervisor des aktuellen Benutzers
+exports.getCurrentUserSupervisor = async (req, res) => {
+    try {
+        const supervisor = await Recruiter.findById(req.user.userId)
+            .select('supervisor')
+            .populate('supervisor', 'name role avatar')
+            .lean();
+
+        if (!supervisor || !supervisor.supervisor) {
+            return res.status(404).json({ error: 'Supervisor not found' });
+        }
+
+        res.json(supervisor.supervisor);
+    } catch (error) {
+        console.error('Error fetching supervisor:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+

@@ -38,9 +38,13 @@ router.post('/authenticate', recruiterController.authenticateRecruiter);
 // hierarchy abfragen
 router.get('/hierarchy', auth(['superAdmin', 'admin', 'recruiter']), recruiterController.getRecruiterHierarchy);
 
+// Route zum abrufen des supervisors
+router.get('/current-supervisor', auth(['recruiter', 'admin']), recruiterController.getCurrentUserSupervisor);
+
 // Route zum Abrufen eines Recruiters nach ID (öffentlich)
 router.get('/:id', recruiterController.getRecruiterById);
 
 router.put('/:id/supervisor', auth(['superAdmin']), recruiterController.updateSupervisor);
+
 
 module.exports = router;
