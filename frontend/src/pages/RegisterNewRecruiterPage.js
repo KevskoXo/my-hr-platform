@@ -28,6 +28,7 @@ const ToggleSliderButton = styled(Box)(({ theme }) => ({
   zIndex: 2, // Oberhalb des Schiebers platzieren
   fontWeight: 500,
   transition: 'color 0.3s',
+  userSelect: 'none',
 }));
 
 // Schiebemarke für den Slider-Effekt (Kleiner Track)
@@ -58,7 +59,7 @@ const RegisterNewRecruiterPage = () => {
   // Bestimmen der verfügbaren Rollen
   useEffect(() => {
     if (userRole === 'superAdmin') {
-      setRole('admin'); // SuperAdmin kann Admins erstellen, standardmäßig auf Admin gesetzt
+      setRole('recruiter'); // SuperAdmin kann Admins erstellen, Standardwert ist Recruiter
     } else {
       setRole('recruiter'); // Admins können nur Recruiter erstellen
     }
@@ -75,18 +76,22 @@ const RegisterNewRecruiterPage = () => {
         endpoint = '/create-recruiter';
       }
 
-      await axiosInstance.post(endpoint, {
-        name,
-        email,
-        password,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await axiosInstance.post(
+        endpoint,
+        {
+          name,
+          email,
+          password,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       // Nach erfolgreicher Registrierung zur Profilseite navigieren
-      navigate('/profile');
+      navigate(-1);
     } catch (error) {
       console.error('Fehler beim Erstellen des neuen Benutzers:', error);
       // Optional: Fehlermeldung anzeigen
@@ -128,7 +133,7 @@ const RegisterNewRecruiterPage = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {(userRole === 'superAdmin' || userRole === 'admin') && (
+        {userRole === 'superAdmin' ? (
           <ToggleSliderContainer>
             <SliderMarker position={role} />
             <ToggleSliderButton
@@ -141,7 +146,6 @@ const RegisterNewRecruiterPage = () => {
             </ToggleSliderButton>
             <ToggleSliderButton
               onClick={() => setRole('admin')}
-              disabled={userRole !== 'superAdmin'}
               style={{
                 color: role === 'admin' ? '#fff' : '#000',
               }}
@@ -149,6 +153,11 @@ const RegisterNewRecruiterPage = () => {
               Admin erstellen
             </ToggleSliderButton>
           </ToggleSliderContainer>
+        ) : (
+          // Falls der Benutzer ein Admin ist, wird die Rolle auf 'recruiter' fixiert
+          <Box sx={{ margin: '1rem 0' }}>
+            <Typography variant="h6">Recruiter erstellen</Typography>
+          </Box>
         )}
         <Button type="submit" variant="contained" color="primary" fullWidth sx={{ marginTop: '1rem' }}>
           Registrieren

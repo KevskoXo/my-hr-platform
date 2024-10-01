@@ -121,7 +121,7 @@ exports.createAdmin = async (req, res) => {
             password: hashedPassword,
             role: 'admin',
             company: req.user.company, // Firma vom SuperAdmin übernehmen
-            supervisor: req.user._id, // SuperAdmin als Vorgesetzten festlegen
+            supervisor: req.user.userId, // SuperAdmin als Vorgesetzten festlegen
             subscription: {
                 status: 'active',
                 startDate: new Date(),
@@ -164,13 +164,14 @@ exports.createRecruiter = async (req, res) => {
             password: hashedPassword,
             role: 'recruiter',
             company: req.user.company, // Firma übernehmen
-            supervisor: req.user._id, // Admin oder SuperAdmin als Vorgesetzten festlegen
             subscription: {
                 status: 'active',
                 startDate: new Date(),
                 endDate: null,
             },
+            supervisor: req.user.userId, // Admin oder SuperAdmin als Vorgesetzten festlegen
         });
+
 
         await newRecruiter.save();
 
