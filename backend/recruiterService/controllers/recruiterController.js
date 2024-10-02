@@ -365,6 +365,21 @@ exports.getRecruiterProfile = async (req, res) => {
     }
 };
 
+// get avata-url
+exports.getRecruiterAvatar = async (req, res) => {
+    try {
+        const recruiterId = req.user.userId;
+        const recruiter = await Recruiter.findById(recruiterId).select('avatar').lean();
+
+        if (!recruiter) {
+            return res.status(404).json({ error: 'Recruiter not found' });
+        }
+        res.json(recruiter);
+    }   catch (error) {
+        console.error('Fehler beim Abrufen des Recruiter-Profils:', error);
+        res.status(500).json({ error: 'Serverfehler' });
+    }
+}
 
 //Token-refresh
 exports.refreshToken = async (req, res) => {

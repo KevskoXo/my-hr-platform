@@ -33,7 +33,7 @@ const RecruiterSchema = new mongoose.Schema({
     subscription: {
         status: {
             type: String,
-            enum: ['trial', 'active', 'expired'],
+            enum: ['trial', 'active', 'viewer'],
             default: 'trial',
         },
         startDate: {

@@ -1,11 +1,14 @@
 import React from 'react';
 import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
+import ProfileIcon from '../components/ProfileIcon';
 
 const DashboardPage = () => {
     const userRole = localStorage.getItem('role'); // Rolle des Benutzers abrufen
 
     return (
         <div>
+            {/* Profil-Icon rechts oben */}
+            <ProfileIcon userRole={userRole}/>
             <h1>Dashboard</h1>
             {userRole === 'superAdmin' && (
                 <>

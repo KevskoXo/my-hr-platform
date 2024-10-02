@@ -2,6 +2,7 @@ import React from 'react';
 import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
 import CompanyDetails from '../components/CompanyDetails';
 import { jwtDecode } from 'jwt-decode';
+import ProfileIcon from '../components/ProfileIcon';
 
 const CompanyPage = () => {
     const userRole = localStorage.getItem('role');
@@ -9,6 +10,8 @@ const CompanyPage = () => {
     const decoded = jwtDecode(token);
     return (
         <div>
+            {/* Profil-Icon rechts oben */}
+            <ProfileIcon userRole={userRole}/>
             <h1>Company Page</h1>
             <CompanyDetails companyId={decoded.company}/>
             {userRole === 'superAdmin' && (

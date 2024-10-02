@@ -11,7 +11,7 @@ import LogoutButton from './LogoutButton';
 const RecruiterNavigationBar = () => {
     const navigate = useNavigate();
     const location = useLocation();
-
+    const userRole = localStorage.getItem('role');
     const handleNavigationChange = (event, newValue) => {
         navigate(newValue);
     };
@@ -34,17 +34,17 @@ const RecruiterNavigationBar = () => {
                 style={location.pathname === '/dashboard' ? { color: '#1976d2' } : {}}
             />
             <BottomNavigationAction
-                label="Profile"
-                value="/recruiter/profile"
-                icon={<AccountCircleIcon />}
-                style={location.pathname === '/profile' ? { color: '#1976d2' } : {}}
-            />
-            <BottomNavigationAction
                 label="Company"
                 value="/recruiter/company"
                 icon={<BusinessIcon />} // Neues Icon für Company
                 style={location.pathname === '/company' ? { color: '#1976d2' } : {}}
             />
+            {(userRole === 'superAdmin' || userRole === 'admin' || userRole === 'recruiter') && (<BottomNavigationAction
+                label="Profile"
+                value="/recruiter/userSearch"
+                icon={<AccountCircleIcon />}
+                style={location.pathname === '/profile' ? { color: '#1976d2' } : {}}
+            />)}
             {/* Logout-Button */}
             <LogoutButton></LogoutButton>
         </BottomNavigation>

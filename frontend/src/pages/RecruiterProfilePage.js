@@ -4,11 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { Typography, Box } from '@mui/material';
 import HierarchyTreeView from '../components/HierarchyTreeView';
 import createAxiosInstance from '../services/axiosInstance';
-import RecruiterNavigationBar from '../components/RecruiterNavigationBar';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import AvatarPlusIcon from '../components/AvatarPlusIcon';
 import SupervisorAvatar from '../components/SupervisorAvatar';
+import BackButton from '../components/BackButton';
 
 const RecruiterProfilePage = () => {
     const [hierarchyData, setHierarchyData] = useState(null);
@@ -53,10 +53,10 @@ const RecruiterProfilePage = () => {
                     {localStorage.getItem('role') === 'admin' && <SupervisorAvatar/>}
                     {localStorage.getItem('role') === 'recruiter' && <SupervisorAvatar/>}
                     <HierarchyTreeView hierarchyData={hierarchyData} />
-                    <RecruiterNavigationBar/>
                 </Box>
                 <AvatarPlusIcon userRole={localStorage.getItem('role')}/>
             </div>
+            <BackButton/>
         </DndProvider>
     );
 };
