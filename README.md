@@ -1,3 +1,4 @@
+Grundprinzipien: anders, schnell, einfach und state of the art.
 1. Einleitung
 1.1 Ziel des Projekts
 Entwicklung einer weltweit einsetzbaren HR-Plattform für Bewerber und Recruiter mit Fokus auf Benutzerfreundlichkeit, Personalisierung und effiziente Kommunikation.
