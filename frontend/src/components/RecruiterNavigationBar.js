@@ -5,6 +5,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import WorkIcon from '@mui/icons-material/Work';
 import BusinessIcon from '@mui/icons-material/Business'; // Icon für Company
+import PersonSearchIcon from '@mui/icons-material/PersonSearch'; // Neues Icon importieren
 import '../App.css';
 import LogoutButton from './LogoutButton';
 
@@ -39,14 +40,14 @@ const RecruiterNavigationBar = () => {
                 icon={<BusinessIcon />} // Neues Icon für Company
                 style={location.pathname === '/company' ? { color: '#1976d2' } : {}}
             />
-            {(userRole === 'superAdmin' || userRole === 'admin' || userRole === 'recruiter') && (<BottomNavigationAction
-                label="Profile"
+            {(userRole === 'superAdmin' || userRole === 'admin' || userRole === 'recruiter') && (
+              <BottomNavigationAction
+                label="Search"
                 value="/recruiter/userSearch"
-                icon={<AccountCircleIcon />}
-                style={location.pathname === '/profile' ? { color: '#1976d2' } : {}}
-            />)}
-            {/* Logout-Button */}
-            <LogoutButton></LogoutButton>
+                icon={<PersonSearchIcon />}
+                style={location.pathname === '/recruiter/userSearch' ? { color: '#1976d2' } : {}}
+              />
+            )}
         </BottomNavigation>
     );
 };
