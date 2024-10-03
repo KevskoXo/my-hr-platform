@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import createAxiosInstance from '../services/axiosInstance'; // Deine eigene axios-Instanz
+import createAxiosInstance from '../services/axiosInstance';
 import BackButton from '../components/BackButton';
 import { styled } from '@mui/material/styles';
 
-// Slider-Container mit Styling, das beide Optionen umrahmt
+// Dynamischer Slider-Container
 const ToggleSliderContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -15,53 +15,66 @@ const ToggleSliderContainer = styled(Box)(({ theme }) => ({
   padding: '0',
   margin: '1rem 0',
   width: '100%',
-  height: '45px', // Höhe des Slider-Markers
-  border: `3px solid ${theme.palette.primary.main}`, // Blauer Rahmen um beide Optionen
+  height: '45px',
+  border: `3px solid ${theme.palette.primary.main}`,
 }));
 
-// Slider-Button mit hervorgehobenem Stil
+// Slider-Button
 const ToggleSliderButton = styled(Box)(({ theme }) => ({
   flex: 1,
   textAlign: 'center',
-  lineHeight: '45px', // Zentriert den Text vertikal
+  lineHeight: '45px',
   cursor: 'pointer',
-  zIndex: 2, // Oberhalb des Schiebers platzieren
+  zIndex: 2,
   fontWeight: 500,
   transition: 'color 0.3s',
   userSelect: 'none',
 }));
 
-// Schiebemarke für den Slider-Effekt (Kleiner Track)
-const SliderMarker = styled(Box)(({ theme, position }) => ({
-  position: 'absolute',
-  top: 0,
-  left: position === 'recruiter' ? 0 : 'calc(50%)',
-  width: '50%',
-  height: '100%',
-  background: theme.palette.primary.main,
-  borderRadius: 30,
-  transition: 'left 0.3s ease-in-out',
-  boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)', // Leichter Schatten für bessere Sichtbarkeit
-  cursor: 'pointer',
-}));
+// Schiebemarke mit dynamischer Positionierung
+const SliderMarker = styled(Box)(({ theme, position, optionsCount }) => {
+  const width = 100 / optionsCount + '%';
+  const left = (100 / optionsCount) * position + '%';
+
+  return {
+    position: 'absolute',
+    top: 0,
+    left: left,
+    width: width,
+    height: '100%',
+    background: theme.palette.primary.main,
+    borderRadius: 30,
+    transition: 'left 0.3s ease-in-out',
+    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
+    cursor: 'pointer',
+  };
+});
 
 const RegisterNewRecruiterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('recruiter'); // Standardmäßig 'recruiter'
+  const [role, setRole] = useState('recruiter');
   const userRole = localStorage.getItem('role');
 
   const navigate = useNavigate();
-  const axiosInstance = createAxiosInstance('recruiters'); // Erstelle eine Instanz von axios
+  const axiosInstance = createAxiosInstance('recruiters');
   const token = localStorage.getItem('accessToken');
 
-  // Bestimmen der verfügbaren Rollen
+  // Verfügbare Rollen basierend auf der Benutzerrolle. initila mit recruiter damit der erste renderer nicht fehlschlägt
+  const [availableRoles, setAvailableRoles] = useState(['viewer']);
+
+
   useEffect(() => {
     if (userRole === 'superAdmin') {
-      setRole('recruiter'); // SuperAdmin kann Admins erstellen, Standardwert ist Recruiter
-    } else {
-      setRole('recruiter'); // Admins können nur Recruiter erstellen
+      setAvailableRoles(['admin', 'recruiter', 'viewer']);
+      setRole('admin'); // Standardmäßig 'admin' für SuperAdmin
+    } else if (userRole === 'admin'){
+      setAvailableRoles(['recruiter', 'viewer']);
+      setRole('recruiter'); // Standardmäßig 'recruiter' für Admin
+    } else if (userRole === 'recruiter'){
+      setAvailableRoles(['viewer']);
+      setRole('viewer'); // Standardmäßig 'recruiter' für Admin
     }
   }, [userRole]);
 
@@ -74,6 +87,8 @@ const RegisterNewRecruiterPage = () => {
         endpoint = '/create-admin';
       } else if (role === 'recruiter') {
         endpoint = '/create-recruiter';
+      } else if (role === 'viewer') {
+        endpoint = '/create-viewer'; // Stellen Sie sicher, dass dieser Endpunkt existiert
       }
 
       await axiosInstance.post(
@@ -90,7 +105,6 @@ const RegisterNewRecruiterPage = () => {
         }
       );
 
-      // Nach erfolgreicher Registrierung zur Profilseite navigieren
       navigate(-1);
     } catch (error) {
       console.error('Fehler beim Erstellen des neuen Benutzers:', error);
@@ -98,10 +112,15 @@ const RegisterNewRecruiterPage = () => {
     }
   };
 
+  // Funktion zur Bestimmung der Position des Schiebemarkers
+  const getMarkerPosition = () => {
+    return availableRoles.indexOf(role);
+  };
+
   return (
     <Box sx={{ maxWidth: 500, margin: 'auto', padding: '2rem', boxShadow: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Neuen Recruiter/Administrator registrieren
+        Neuen Benutzer registrieren
       </Typography>
       <form onSubmit={handleSubmit}>
         <TextField
@@ -133,30 +152,26 @@ const RegisterNewRecruiterPage = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {userRole === 'superAdmin' ? (
+        {availableRoles.length > 1 ? (
           <ToggleSliderContainer>
-            <SliderMarker position={role} />
-            <ToggleSliderButton
-              onClick={() => setRole('recruiter')}
-              style={{
-                color: role === 'recruiter' ? '#fff' : '#000',
-              }}
-            >
-              Recruiter erstellen
-            </ToggleSliderButton>
-            <ToggleSliderButton
-              onClick={() => setRole('admin')}
-              style={{
-                color: role === 'admin' ? '#fff' : '#000',
-              }}
-            >
-              Admin erstellen
-            </ToggleSliderButton>
+            <SliderMarker position={getMarkerPosition()} optionsCount={availableRoles.length} />
+            {availableRoles.map((availableRole) => (
+              <ToggleSliderButton
+                key={availableRole}
+                onClick={() => setRole(availableRole)}
+                style={{
+                  color: role === availableRole ? '#fff' : '#000',
+                }}
+              >
+                {availableRole.charAt(0).toUpperCase() + availableRole.slice(1)} erstellen
+              </ToggleSliderButton>
+            ))}
           </ToggleSliderContainer>
         ) : (
-          // Falls der Benutzer ein Admin ist, wird die Rolle auf 'recruiter' fixiert
           <Box sx={{ margin: '1rem 0' }}>
-            <Typography variant="h6">Recruiter erstellen</Typography>
+            <Typography variant="h6">
+              {availableRoles[0].charAt(0).toUpperCase() + availableRoles[0].slice(1)} erstellen
+            </Typography>
           </Box>
         )}
         <Button type="submit" variant="contained" color="primary" fullWidth sx={{ marginTop: '1rem' }}>

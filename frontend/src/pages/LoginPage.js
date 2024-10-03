@@ -27,7 +27,7 @@ const LoginPage = () => {
             setError(null);
 
             // Je nach Rolle auf verschiedene Seiten weiterleiten
-            if (role === 'recruiter' || role === 'admin' || role === 'superAdmin') {
+            if (role === 'recruiter' || role === 'admin' || role === 'superAdmin' || role === 'viewer') {
                 window.location.href = '/recruiter/dashboard'; // Recruiter Dashboard
             } else {
                 window.location.href = '/dashboard'; // User Dashboard

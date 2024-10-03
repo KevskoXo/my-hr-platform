@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const AvatarPlusIcon = ({ userRole, onAdd }) => {
   const navigate = useNavigate();
 
-  if (userRole !== 'admin' && userRole !== 'superAdmin') {
+  if (userRole !== 'recruiter' && userRole !== 'admin' && userRole !== 'superAdmin') {
     return null; // Wenn der Benutzer kein Admin oder SuperAdmin ist, wird nichts gerendert
   }
 

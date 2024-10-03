@@ -34,6 +34,12 @@ const CompanyPage = () => {
                     <p>View and manage your jobs</p>
                 </>
             )}
+            {userRole === 'viewer' && (
+                <>
+                    <h2>Manage Jobs</h2>
+                    <p>View your jobs</p>
+                </>
+            )}
             <RecruiterNavigationBar/>
         </div>
     );

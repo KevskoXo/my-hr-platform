@@ -8,7 +8,7 @@ const auth = require('../middleware/auth'); // Auth-Middleware importieren
 router.post('/add', auth(['recruiter']), companyController.addCompany);
 
 // Route zum Abrufen eines bestimmten Unternehmens anhand der ID (für alle)
-router.get('/:id', auth(['recruiter', 'admin', 'superAdmin']), companyController.getCompanyById);
+router.get('/:id', auth(['viewer', 'recruiter', 'admin', 'superAdmin']), companyController.getCompanyById);
 
 // Route zum Abrufen aller Unternehmen (für alle)
 router.get('/', companyController.getAllCompanies);

@@ -181,6 +181,48 @@ exports.createRecruiter = async (req, res) => {
     }
 };
 
+// Viewer von Admin, Recruiter oder SuperAdmin anlegen lassen
+exports.createViewer = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        // Überprüfen, ob der Benutzer Admin oder SuperAdmin ist
+        if (req.user.role !== 'admin' && req.user.role !== 'superAdmin' && req.user.role !== 'recruiter') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Prüfen, ob der Viewer bereits existiert
+        const existingViewer = await Recruiter.findOne({ email });
+        if (existingViewer) {
+            return res.status(400).json({ error: 'Viewer already exists' });
+        }
+
+        // Passwort hashen
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Neuen Viewer erstellen, Firma referenzieren und Vorgesetzten festlegen
+        const newViewer = new Recruiter({
+            name,
+            email,
+            password: hashedPassword,
+            role: 'viewer',
+            company: req.user.company, // Firma übernehmen
+            subscription: {
+                status: 'viewer',
+                startDate: new Date(),
+                endDate: null,
+            },
+            supervisor: req.user.userId, // Admin oder SuperAdmin als Vorgesetzten festlegen
+        });
+
+        await newViewer.save();
+
+        res.status(201).json({ message: 'Viewer created successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 
 exports.getRecruiterHierarchy = async (req, res) => {
     try {

@@ -25,7 +25,7 @@ const RecruiterSchema = new mongoose.Schema({
     }],
     role: {
         type: String,
-        enum: ['superAdmin', 'admin', 'recruiter'], // Erlaubte Rollen
+        enum: ['superAdmin', 'admin', 'recruiter', 'viewer'], // Erlaubte Rollen
         required: true,
         default: 'recruiter', // Standardrolle ist 'recruiter'
     },

@@ -17,6 +17,9 @@ router.post('/create-admin', auth(['superAdmin']), recruiterController.createAdm
 // Registrierungsroute für recruiter
 router.post('/create-recruiter', auth(['admin', 'superAdmin']), recruiterController.createRecruiter);
 
+// Registrierungsroute für viewer
+router.post('/create-viewer', auth(['recruiter', 'admin', 'superAdmin']), recruiterController.createViewer);
+
 // Route zum Login (öffentlich)
 router.post('/login', recruiterController.loginRecruiter);
 
