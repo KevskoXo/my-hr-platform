@@ -133,3 +133,96 @@ exports.searchJobs = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+
+// GET /jobs/byCompany
+exports.getJobsByCompany = async (req, res) => {
+    try {
+      const companyId = req.user.company;
+  
+      const jobs = await Job.find({ company: companyId })
+        .populate('recruiter', 'name')
+        .exec();
+  
+      res.json(jobs);
+    } catch (error) {
+      res.status(500).json({ message: 'Fehler beim Abrufen der Jobs' });
+    }
+  };
+  
+  // GET /jobs/byAdmin
+  exports.getJobsByAdmin = async (req, res) => {
+    try {
+      const companyId = req.user.company;
+  
+      // Jobs des Admins und der Recruiter seiner Firma
+      const jobs = await Job.find({ company: companyId })
+        .populate('recruiter', 'name')
+        .exec();
+  
+      res.json(jobs);
+    } catch (error) {
+      res.status(500).json({ message: 'Fehler beim Abrufen der Jobs' });
+    }
+  };
+  
+  // GET /jobs/byRecruiter
+  exports.getJobsByRecruiter = async (req, res) => {
+    try {
+      const recruiterId = req.user.id;
+  
+      const jobs = await Job.find({ recruiter: recruiterId })
+        .populate('recruiter', 'name')
+        .exec();
+  
+      res.json(jobs);
+    } catch (error) {
+      res.status(500).json({ message: 'Fehler beim Abrufen der Jobs' });
+    }
+  };
+  
+  // GET /jobs/byViewer
+  exports.getJobsByViewer = async (req, res) => {
+    try {
+      const viewerId = req.user.id;
+  
+      const jobs = await Job.find({ assignedViewers: viewerId })
+        .populate('recruiter', 'name')
+        .exec();
+  
+      res.json(jobs);
+    } catch (error) {
+      res.status(500).json({ message: 'Fehler beim Abrufen der Jobs' });
+    }
+  };
+  
+  // POST /jobs/:jobId/markAsViewed
+  exports.markJobAsViewed = async (req, res) => {
+    try {
+      const jobId = req.params.jobId;
+  
+      const job = await Job.findById(jobId);
+  
+      if (!job) {
+        return res.status(404).json({ message: 'Job nicht gefunden' });
+      }
+  
+      // Berechtigungsprüfung
+      if (req.user.role === 'recruiter' && job.recruiter.toString() !== req.user.id) {
+        return res.status(403).json({ message: 'Zugriff verweigert' });
+      }
+  
+      if (req.user.role === 'admin' && job.company.toString() !== req.user.company) {
+        return res.status(403).json({ message: 'Zugriff verweigert' });
+      }
+  
+      // Job als angesehen markieren
+      job.hasNewApplicants = false;
+      await job.save();
+  
+      res.json({ message: 'Job als angesehen markiert' });
+    } catch (error) {
+      res.status(500).json({ message: 'Fehler beim Aktualisieren des Jobs' });
+    }
+  };
+  

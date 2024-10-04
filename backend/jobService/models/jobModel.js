@@ -29,6 +29,24 @@ const jobSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    hasNewApplicants: {
+        type: Boolean,
+        default: false,
+    },
+    applicantCount: {
+        type: Number,
+        default: 0,
+    },
+    assignedViewers: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Viewer',
+        },
+    ],
+    skills: [{
+        type: String,
+        enum: ['JavaScript', 'Python', 'React', 'Node.js', 'Machine Learning', 'Projektmanagement', 'Marketing', 'Vertrieb', 'Finanzen', 'HR', 'Design', 'Andere'],
+    }],
 });
 
 module.exports = mongoose.model('Job', jobSchema);

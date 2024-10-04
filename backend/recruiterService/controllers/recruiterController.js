@@ -558,3 +558,15 @@ exports.getCurrentUserSupervisor = async (req, res) => {
     }
 };
 
+// GET /recruiters
+exports.getRecruiters = async (req, res) => {
+    try {
+      const companyId = req.user.company;
+  
+      const recruiters = await Recruiter.find({ company: companyId }).select('name');
+  
+      res.json(recruiters);
+    } catch (error) {
+      res.status(500).json({ message: 'Fehler beim Abrufen der Recruiter' });
+    }
+  };

@@ -23,6 +23,8 @@ router.post('/create-viewer', auth(['recruiter', 'admin', 'superAdmin']), recrui
 // Route zum Login (öffentlich)
 router.post('/login', recruiterController.loginRecruiter);
 
+// GET /recruiters
+router.get('/recruiters', auth(['superAdmin', 'admin']), recruiterController.getRecruiters);
 
 // Route zum Verknüpfen eines Recruiters mit einem Unternehmen (nur für Recruiter)
 router.post('/assign-company', auth(['recruiter']), recruiterController.assignCompanyToRecruiter);
