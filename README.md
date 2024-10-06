@@ -1,7 +1,11 @@
 Glaubenssätze:
+
 -State above the Art: Wir setzen neue Maßstäbe und gehen über den Stand der Technik hinaus – mit modernen Technologien und innovativen Ansätzen.
+
 -Status Quo brechen: Wir gehen über das Gewohnte hinaus und gestalten das Recruiting neu – mit Video-Bewerbungen, direkter Kommunikation und Lebensläufen statt Motivationsschreiben.
+
 -Mühelos: Eine Plattform, die den gesamten Prozess einfach und verständlich macht, sodass Nutzer sich ohne Hindernisse bewegen können.
+
 -Rasant und Effizient: Wir beschleunigen den Bewerbungsprozess, ohne an Präzision einzubüßen – One-Click-Bewerbungen, direkte Nachrichten und Video-Interviews für eine schnelle und effektive Rekrutierung.
 
 1. Einleitung
