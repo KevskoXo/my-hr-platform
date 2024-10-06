@@ -44,6 +44,7 @@ const RecruiterProfilePage = () => {
     return (
         <DndProvider backend={HTML5Backend}>
             <div>
+            <BackButton/>
                 <h1>Recruiter Profile</h1>
                 <h2>Manage Recruiter</h2>
                 <Box sx={{ mt: 4 }}>
@@ -56,7 +57,7 @@ const RecruiterProfilePage = () => {
                 </Box>
                 <AvatarPlusIcon userRole={localStorage.getItem('role')}/>
             </div>
-            <BackButton/>
+            
         </DndProvider>
     );
 };

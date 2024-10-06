@@ -94,7 +94,7 @@ const MyJobs = ({ userRole }) => {
   }, [userRole, axiosInstance, token]);
 
   const handleJobClick = (jobId) => {
-    navigate(`/jobs/${jobId}`); // Navigieren zur Job-Detailseite
+    navigate(`/recruiter/jobs/${jobId}`); // Navigieren zur Job-Detailseite
   };
 
   const handleApplicantsClick = async (jobId) => {

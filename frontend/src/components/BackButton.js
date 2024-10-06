@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const BackButton = ({ label = 'Zurück', customStyles }) => {
   const navigate = useNavigate();
@@ -12,8 +13,8 @@ const BackButton = ({ label = 'Zurück', customStyles }) => {
 
   return (
     <Button
-      variant="outlined"
-      startIcon={<ArrowBack />}
+      //variant="outlined"
+      startIcon={<ArrowBackIcon />}
       onClick={handleBack}
       sx={{
         margin: '1rem',

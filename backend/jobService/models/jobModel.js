@@ -47,6 +47,19 @@ const jobSchema = new mongoose.Schema({
         type: String,
         enum: ['JavaScript', 'Python', 'React', 'Node.js', 'Machine Learning', 'Projektmanagement', 'Marketing', 'Vertrieb', 'Finanzen', 'HR', 'Design', 'Andere'],
     }],
+    startDate: {
+        type: Date,
+    },
+    employmentType: {
+        type: String,
+        enum: ['Vollzeit', 'Teilzeit', 'Freelance', 'Praktikum', 'Werkstudent', 'Andere'],
+    },
+    salary: {
+        type: String, // Oder Number, je nach Bedarf
+    },
+    videoUrl: {
+        type: String, // URL zum Video oder Dateipfad
+    },
 });
 
 module.exports = mongoose.model('Job', jobSchema);
