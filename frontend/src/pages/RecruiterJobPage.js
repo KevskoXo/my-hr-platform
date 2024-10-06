@@ -4,20 +4,22 @@ import {
   Typography,
   Paper,
   Avatar,
-  Button,
+  IconButton,
   Grid,
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import createAxiosInstance from '../services/axiosInstance';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import BackButton from '../components/BackButton';
+import SettingsIcon from '@mui/icons-material/Settings';
 
-const RecruiterJobPage = ({ userRole }) => {
+const RecruiterJobPage = () => {
   const { jobId } = useParams();
   const [job, setJob] = useState(null);
   const axiosInstance = createAxiosInstance('jobs');
   const token = localStorage.getItem('accessToken');
   const navigate = useNavigate();
+  const userRole = localStorage.getItem('role');
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -59,9 +61,9 @@ const RecruiterJobPage = ({ userRole }) => {
   return (
     <Box sx={{ padding: 2 }}>
       {/* BackButton */}
-      <BackButton/>
+      <BackButton />
 
-      {/* Oberer Bereich mit CompanyAvatar und Jobtitel */}
+      {/* Oberer Bereich mit CompanyAvatar, Jobtitel und ggf. Zahnrad-Icon */}
       <Paper sx={{ padding: 2, marginBottom: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
@@ -82,6 +84,17 @@ const RecruiterJobPage = ({ userRole }) => {
               {job.location} • {new Date(job.datePosted).toLocaleDateString()}
             </Typography>
           </Grid>
+          {/* Zahnrad-Icon für berechtigte Benutzer */}
+          {(userRole === 'recruiter' || userRole === 'admin' || userRole === 'superAdmin') && (
+            <Grid item>
+              <IconButton
+                onClick={() => navigate(`/recruiter/jobs/${jobId}/edit`)}
+                aria-label="Job bearbeiten"
+              >
+                <SettingsIcon />
+              </IconButton>
+            </Grid>
+          )}
         </Grid>
       </Paper>
 
@@ -155,13 +168,6 @@ const RecruiterJobPage = ({ userRole }) => {
             Ihr Browser unterstützt das Video-Tag nicht.
           </video>
         </Paper>
-      )}
-
-      {/* Bearbeiten-Button */}
-      {(userRole === 'recruiter' || userRole === 'admin' || userRole === 'superAdmin') && (
-        <Button variant="contained" color="primary" onClick={() => navigate(`/jobs/${jobId}/edit`)}>
-          Job bearbeiten
-        </Button>
       )}
     </Box>
   );

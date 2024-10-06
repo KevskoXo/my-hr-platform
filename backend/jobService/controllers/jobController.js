@@ -227,3 +227,24 @@ exports.getJobsByCompany = async (req, res) => {
     }
   };
   
+
+// Update a job by ID
+exports.updateJob = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+    const updates = req.body;
+
+    // Optional: Berechtigungsprüfung einfügen
+    // Stellen Sie sicher, dass der Benutzer berechtigt ist, diesen Job zu bearbeiten
+
+    const job = await Job.findByIdAndUpdate(jobId, updates, { new: true });
+
+    if (!job) {
+      return res.status(404).json({ message: 'Job nicht gefunden' });
+    }
+
+    res.json(job);
+  } catch (error) {
+    res.status(500).json({ message: 'Fehler beim Aktualisieren des Jobs' });
+  }
+};

@@ -21,6 +21,9 @@ router.get('/byViewer', auth(['viewer']), jobController.getJobsByViewer);
 // POST /jobs/:jobId/markAsViewed
 router.post('/:jobId/markAsViewed', auth(['recruiter', 'superAdmin', 'admin']), jobController.markJobAsViewed);
 
+// Update a job
+router.put('/:jobId', auth(['recruiter', 'superAdmin', 'admin']), jobController.updateJob);
+
 router.get('/', jobController.getAllJobs); // Öffentlich zugänglich
 router.post('/', auth(['recruiter']), jobController.createJob); // Nur Recruiter können Jobs erstellen
 router.get('/byCpmpany', auth(['recruiter', 'superAdmin', 'admin', 'viewer']), jobController.getJobsByCompany) // company jobs der recruiter

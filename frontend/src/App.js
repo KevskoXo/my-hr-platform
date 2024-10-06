@@ -16,6 +16,7 @@ import JobSeekerJobsPage from './pages/JobSeekerJobsPage';
 import RegisterNewRecruiterPage from './pages/RegisterNewRecruiterPage';
 import RecruiterUserSearchPage from './pages/RecruiterUserSearchPage';
 import RecruiterJobPage from './pages/RecruiterJobPage';
+import RecruiterJobEditPage from './pages/RecruiterJobEditPage';
 
 function App() {
     return (
@@ -38,6 +39,7 @@ function App() {
                 <Route path="/recruiter/company" element={<ProtectedRoute allowedRoles={['viewer', 'recruiter', 'admin', 'superAdmin']}><RecruiterCompanyPage /></ProtectedRoute>} />
                 <Route path="/recruiter/userSearch" element={<ProtectedRoute allowedRoles={['recruiter', 'admin', 'superAdmin']}><RecruiterUserSearchPage /></ProtectedRoute>} />
                 <Route path="/recruiter/jobs/:jobId" element={<ProtectedRoute allowedRoles={['recruiter', 'admin', 'superAdmin']}><RecruiterJobPage /></ProtectedRoute>} />
+                <Route path="/recruiter/jobs/:jobId/edit" element={<ProtectedRoute allowedRoles={['recruiter', 'admin', 'superAdmin']}><RecruiterJobEditPage /></ProtectedRoute>} />
 
             </Routes>
         </Router>

@@ -50,7 +50,7 @@ const RecruiterUserSearchPage = () => {
 
     <Box sx={{ padding: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Benutzer suchen
+        Kandidaten suchen
       </Typography>
 
       {/* Such- und Filterbereich */}
@@ -58,7 +58,7 @@ const RecruiterUserSearchPage = () => {
         <TextField
           fullWidth
           variant="outlined"
-          label="Nach Benutzer suchen..."
+          label="Nach Kandidaten suchen..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
