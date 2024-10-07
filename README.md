@@ -1,4 +1,13 @@
-Grundprinzipien: anders, schnell, einfach und state of the art.
+Grundprinzipien:
+
+-Status Quo brechen: Wir gehen über das Gewohnte hinaus und gestalten das Recruiting neu – mit Video-Bewerbungen, direkter Kommunikation und Lebensläufen statt Motivationsschreiben.
+
+-State above the Art: Wir setzen neue Maßstäbe und gehen über den Stand der Technik hinaus – mit innovativen Ansätzen und einer exzellenten Umsetzung, die moderne Technologien und durchdachte Lösungen vereint.
+
+-Mühelos: Eine Plattform, die den gesamten Prozess einfach und verständlich macht, sodass Nutzer sich ohne Hindernisse bewegen können.
+
+-Rasant und Effizient: Wir beschleunigen den Bewerbungsprozess, ohne an Präzision einzubüßen – One-Click-Bewerbungen, direkte Nachrichten und Video-Interviews für eine schnelle und effektive Rekrutierung.
+
 1. Einleitung
 1.1 Ziel des Projekts
 Entwicklung einer weltweit einsetzbaren HR-Plattform für Bewerber und Recruiter mit Fokus auf Benutzerfreundlichkeit, Personalisierung und effiziente Kommunikation.
