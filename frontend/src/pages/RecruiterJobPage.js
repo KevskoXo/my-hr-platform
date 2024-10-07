@@ -10,8 +10,9 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import createAxiosInstance from '../services/axiosInstance';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-import BackButton from '../components/BackButton';
 import SettingsIcon from '@mui/icons-material/Settings';
+import BackButton from '../components/BackButton';
+
 
 const RecruiterJobPage = () => {
   const { jobId } = useParams();
@@ -61,7 +62,7 @@ const RecruiterJobPage = () => {
   return (
     <Box sx={{ padding: 2 }}>
       {/* BackButton */}
-      <BackButton />
+      <BackButton to='/recruiter/company/'/>
 
       {/* Oberer Bereich mit CompanyAvatar, Jobtitel und ggf. Zahnrad-Icon */}
       <Paper sx={{ padding: 2, marginBottom: 2 }}>
