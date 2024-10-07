@@ -1,4 +1,4 @@
-Glaubenssätze:
+Grundprinzipien:
 
 -Status Quo brechen: Wir gehen über das Gewohnte hinaus und gestalten das Recruiting neu – mit Video-Bewerbungen, direkter Kommunikation und Lebensläufen statt Motivationsschreiben.
 
