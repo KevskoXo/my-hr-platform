@@ -14,8 +14,13 @@ import {
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import createAxiosInstance from '../services/axiosInstance';
+import Autocomplete from '@mui/material/Autocomplete'; // Für Autovervollständigung
 
 const employmentTypes = ['Vollzeit', 'Teilzeit', 'Freelance', 'Praktikum', 'Werkstudent', 'Andere'];
+
+// Beispiel für häufig verwendete Skills und Tasks für Autovervollständigung
+const commonSkills = ['JavaScript', 'Python', 'React', 'Node.js', 'Machine Learning', 'Projektmanagement', 'Marketing', 'Vertrieb', 'Finanzen', 'HR', 'Design', 'Andere'];
+const commonTasks = ['Entwicklung', 'Design', 'Testing', 'Marketingkampagnen', 'Projektplanung', 'Kundensupport', 'Vertriebsgespräche', 'Finanzanalyse', 'HR-Management', 'Andere'];
 
 const RecruiterJobEditPage = () => {
   const { jobId } = useParams();
@@ -46,7 +51,7 @@ const RecruiterJobEditPage = () => {
         // Überprüfen und Konvertieren von jobData.skills in ein Array
         if (jobData.skills) {
           if (typeof jobData.skills === 'string') {
-            jobData.skills = jobData.skills.split(';');
+            jobData.skills = jobData.skills.split(';').map(skill => skill.trim());
           } else if (Array.isArray(jobData.skills)) {
             // Nichts tun, es ist bereits ein Array
           } else {
@@ -55,6 +60,20 @@ const RecruiterJobEditPage = () => {
           }
         } else {
           jobData.skills = [];
+        }
+
+        // Überprüfen und Konvertieren von jobData.tasks in ein Array
+        if (jobData.tasks) {
+          if (typeof jobData.tasks === 'string') {
+            jobData.tasks = jobData.tasks.split(';').map(task => task.trim());
+          } else if (Array.isArray(jobData.tasks)) {
+            // Nichts tun, es ist bereits ein Array
+          } else {
+            // Falls tasks ein anderes Format hat, initialisieren wir es als leeres Array
+            jobData.tasks = [];
+          }
+        } else {
+          jobData.tasks = [];
         }
 
         setJobData(jobData);
@@ -72,12 +91,22 @@ const RecruiterJobEditPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Spezifische Behandlung für numerische Felder
+    if (name === 'salary') {
+      // Verhindern, dass der Benutzer negative Werte eingibt
+      if (value < 0) return;
+    }
+
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSkillsChange = (e) => {
-    const { value } = e.target;
-    setFormData({ ...formData, skills: value.split(';') });
+  const handleSkillsChange = (event, value) => {
+    setFormData({ ...formData, skills: value });
+  };
+
+  const handleTasksChange = (event, value) => {
+    setFormData({ ...formData, tasks: value });
   };
 
   const handleSubmit = async (e) => {
@@ -187,21 +216,49 @@ const RecruiterJobEditPage = () => {
             {/* Gehalt */}
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Gehalt"
+                label="Gehalt (EUR)"
                 name="salary"
+                type="number"
                 value={formData.salary || ''}
                 onChange={handleInputChange}
                 fullWidth
+                InputProps={{ inputProps: { min: 0 } }}
               />
             </Grid>
-            {/* Fähigkeiten */}
+            {/* Task-Input */}
             <Grid item xs={12}>
-              <TextField
-                label="Gewünschte Fähigkeiten (durch Semikolon getrennt)"
-                name="skills"
-                value={Array.isArray(formData.skills) ? formData.skills.join(';') : formData.skills || ''}
+              <Autocomplete
+                multiple
+                freeSolo
+                options={commonTasks}
+                value={formData.tasks || []}
+                onChange={handleTasksChange}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    label="Gewünschte Aufgaben (Mehrfachauswahl)"
+                    placeholder="Aufgaben hinzufügen"
+                  />
+                )}
+              />
+            </Grid>
+            {/* Skills-Input */}
+            <Grid item xs={12}>
+              <Autocomplete
+                multiple
+                freeSolo
+                options={commonSkills}
+                value={formData.skills || []}
                 onChange={handleSkillsChange}
-                fullWidth
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    label="Gewünschte Fähigkeiten (Mehrfachauswahl)"
+                    placeholder="Fähigkeiten hinzufügen"
+                  />
+                )}
               />
             </Grid>
             {/* Video URL */}

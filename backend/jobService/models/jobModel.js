@@ -1,5 +1,3 @@
-// jobService/models/Job.js
-
 const mongoose = require('mongoose');
 
 const jobSchema = new mongoose.Schema({
@@ -12,26 +10,34 @@ const jobSchema = new mongoose.Schema({
         required: true,
     },
     company: {
-        type: mongoose.Schema.Types.ObjectId, // Referenz auf das Company-Model
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Company',
         required: true,
     },
     recruiter: {
-        type: mongoose.Schema.Types.ObjectId, // Referenz auf das Recruiter-Model
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Recruiter',
         required: true,
     },
     location: {
-        type: String,
+        type: {
+            type: String,
+            enum: ['Point'],
+            required: true,
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            required: true,
+        },
     },
-    tags: [String], // Tags zum Filtern
+    tags: [String],
     datePosted: {
         type: Date,
         default: Date.now,
     },
-    hasNewApplicants: {
-        type: Boolean,
-        default: false,
+    newApplicantCount: {
+        type: Number,
+        default: 0,
     },
     applicantCount: {
         type: Number,
@@ -39,13 +45,15 @@ const jobSchema = new mongoose.Schema({
     },
     assignedViewers: [
         {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Viewer',
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Viewer',
         },
     ],
     skills: [{
         type: String,
-        enum: ['JavaScript', 'Python', 'React', 'Node.js', 'Machine Learning', 'Projektmanagement', 'Marketing', 'Vertrieb', 'Finanzen', 'HR', 'Design', 'Andere'],
+    }],
+    tasks: [{
+        type: String,
     }],
     startDate: {
         type: Date,
@@ -55,11 +63,16 @@ const jobSchema = new mongoose.Schema({
         enum: ['Vollzeit', 'Teilzeit', 'Freelance', 'Praktikum', 'Werkstudent', 'Andere'],
     },
     salary: {
-        type: String, // Oder Number, je nach Bedarf
+        type: Number,
+        required: true,
+        min: 0,
     },
     videoUrl: {
-        type: String, // URL zum Video oder Dateipfad
+        type: String,
     },
 });
+
+// Index für Geolocation hinzufügen
+jobSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Job', jobSchema);

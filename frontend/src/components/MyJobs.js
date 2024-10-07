@@ -28,6 +28,7 @@ import createAxiosInstance from '../services/axiosInstance';
 import InfoIcon from '@mui/icons-material/Info';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import Autocomplete from '@mui/material/Autocomplete'; // Für Autovervollständigung
 
 const MyJobs = ({ userRole }) => {
   const [jobs, setJobs] = useState([]);
@@ -35,13 +36,19 @@ const MyJobs = ({ userRole }) => {
   const [filterType, setFilterType] = useState('');
   const [filterDate, setFilterDate] = useState(null);
   const [filterRecruiter, setFilterRecruiter] = useState('');
+  const [filterTask, setFilterTask] = useState(''); // Neuer Task-Filter
+  const [filterSalary, setFilterSalary] = useState(''); // Neuer Salary-Filter
   const [recruiters, setRecruiters] = useState([]);
   const navigate = useNavigate();
   const axiosInstance = createAxiosInstance('jobs');
   const axiosRecruiterInstance = createAxiosInstance('recruiters');
   const token = localStorage.getItem('accessToken');
 
-  const jobTypes = ['IT', 'Engineering', 'Marketing', 'Finance', 'Sales', 'Human Resources', 'Other'];
+  // Definiere die möglichen Employment Types entsprechend deinem Schema
+  const employmentTypes = ['Vollzeit', 'Teilzeit', 'Freelance', 'Praktikum', 'Werkstudent', 'Andere'];
+
+  // Beispiel für häufig verwendete Tasks für Autovervollständigung
+  const commonTasks = ['Entwicklung', 'Design', 'Testing', 'Marketingkampagnen', 'Projektplanung', 'Kundensupport', 'Vertriebsgespräche', 'Finanzanalyse', 'HR-Management', 'Andere'];
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -91,14 +98,15 @@ const MyJobs = ({ userRole }) => {
     };
 
     fetchRecruiters();
-  }, [userRole, axiosInstance, token]);
+  }, [userRole, axiosRecruiterInstance, token]);
 
+  // Navigiert zur Job-Detailseite
   const handleJobClick = (jobId) => {
-    navigate(`/recruiter/jobs/${jobId}`); // Navigieren zur Job-Detailseite
+    navigate(`/recruiter/jobs/${jobId}`);
   };
 
+  // Handle-Klick auf Bewerber-Icon
   const handleApplicantsClick = async (jobId) => {
-    // Aktualisieren Sie den Job-Status, um das Symbol verschwinden zu lassen
     try {
       await axiosInstance.post(
         `/${jobId}/markAsViewed`,
@@ -110,19 +118,21 @@ const MyJobs = ({ userRole }) => {
         }
       );
 
-      // Aktualisieren Sie die Jobliste, um den aktualisierten Status widerzuspiegeln
+      // Aktualisiere die Jobliste, um den neuen Bewerber-Status widerzuspiegeln
       setJobs((prevJobs) =>
         prevJobs.map((job) =>
-          job._id === jobId ? { ...job, hasNewApplicants: false } : job
+          job._id === jobId ? { ...job, newApplicantCount: 0 } : job
         )
       );
 
-      navigate(`/jobs/${jobId}/applicants`); // Navigieren zur Bewerberliste
+      navigate(`/jobs/${jobId}/applicants`); // Navigiere zur Bewerberliste mit vorgefilterten neuen Bewerbern
     } catch (error) {
       console.error('Fehler beim Aktualisieren des Job-Status:', error);
+      // Optional: Zeige eine Fehlermeldung an (z.B. mit Snackbar)
     }
   };
 
+  // Filter-Handler
   const handleFilterTitleChange = (e) => {
     setFilterTitle(e.target.value);
   };
@@ -139,14 +149,23 @@ const MyJobs = ({ userRole }) => {
     setFilterRecruiter(e.target.value);
   };
 
-  const handleCreateJob = () => {
-    navigate('/jobs/create'); // Navigieren zur Job-Erstellungsseite
+  const handleFilterTaskChange = (event, value) => {
+    setFilterTask(value);
   };
 
-  // Anwenden des Filters
+  const handleFilterSalaryChange = (e) => {
+    setFilterSalary(e.target.value);
+  };
+
+  // Navigiert zur Job-Erstellungsseite
+  const handleCreateJob = () => {
+    navigate('/jobs/create');
+  };
+
+  // Anwenden des Filters auf die Jobliste
   const filteredJobs = jobs.filter((job) => {
     const matchesTitle = job.title.toLowerCase().includes(filterTitle.toLowerCase());
-    const matchesType = filterType ? job.type === filterType : true;
+    const matchesType = filterType ? job.employmentType === filterType : true;
     const matchesRecruiter =
       (userRole === 'superAdmin' || userRole === 'admin') && filterRecruiter
         ? job.recruiter && job.recruiter._id === filterRecruiter
@@ -154,15 +173,23 @@ const MyJobs = ({ userRole }) => {
     const matchesDate = filterDate
       ? new Date(job.datePosted).toDateString() === filterDate.toDateString()
       : true;
+    const matchesTask = filterTask ? job.tasks.includes(filterTask) : true;
+    const matchesSalary = filterSalary ? job.salary >= parseInt(filterSalary, 10) : true;
 
-    return matchesTitle && matchesType && matchesRecruiter && matchesDate;
+    return matchesTitle && matchesType && matchesRecruiter && matchesDate && matchesTask && matchesSalary;
   });
 
   return (
     <Box sx={{ marginTop: 2 }}>
+      {/* Titel */}
+      <Typography variant="h4" gutterBottom>
+        Meine Jobs
+      </Typography>
+
       {/* Filterbereich */}
       <Box sx={{ marginBottom: 2 }}>
         <Grid container spacing={2}>
+          {/* Jobtitel-Suche */}
           <Grid item xs={12} sm={6} md={3}>
             <TextField
               label="Jobtitel suchen"
@@ -172,6 +199,8 @@ const MyJobs = ({ userRole }) => {
               fullWidth
             />
           </Grid>
+
+          {/* Anstellungstyp-Filter */}
           <Grid item xs={12} sm={6} md={3}>
             <FormControl variant="outlined" fullWidth>
               <InputLabel id="type-label">Typ</InputLabel>
@@ -184,7 +213,7 @@ const MyJobs = ({ userRole }) => {
                 <MenuItem value="">
                   <em>Alle</em>
                 </MenuItem>
-                {jobTypes.map((type) => (
+                {employmentTypes.map((type) => (
                   <MenuItem key={type} value={type}>
                     {type}
                   </MenuItem>
@@ -192,6 +221,8 @@ const MyJobs = ({ userRole }) => {
               </Select>
             </FormControl>
           </Grid>
+
+          {/* Recruiter-Filter (nur für Admins und SuperAdmins) */}
           {(userRole === 'superAdmin' || userRole === 'admin') && (
             <Grid item xs={12} sm={6} md={3}>
               <FormControl variant="outlined" fullWidth>
@@ -214,6 +245,8 @@ const MyJobs = ({ userRole }) => {
               </FormControl>
             </Grid>
           )}
+
+          {/* Datum-Filter */}
           <Grid item xs={12} sm={6} md={3}>
             <LocalizationProvider dateAdapter={AdapterDateFns} locale={de}>
               <DatePicker
@@ -224,8 +257,34 @@ const MyJobs = ({ userRole }) => {
               />
             </LocalizationProvider>
           </Grid>
+
+          {/* Task-Filter */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Autocomplete
+              options={commonTasks}
+              freeSolo
+              value={filterTask}
+              onChange={handleFilterTaskChange}
+              renderInput={(params) => <TextField {...params} label="Aufgabe filtern" variant="outlined" />}
+              fullWidth
+            />
+          </Grid>
+
+          {/* Salary-Filter */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              label="Gehalt ab (EUR)"
+              variant="outlined"
+              type="number"
+              value={filterSalary}
+              onChange={handleFilterSalaryChange}
+              fullWidth
+              InputProps={{ inputProps: { min: 0 } }}
+            />
+          </Grid>
         </Grid>
       </Box>
+
       {/* Anzeige der Jobs */}
       <List>
         {filteredJobs.map((job) => (
@@ -234,13 +293,24 @@ const MyJobs = ({ userRole }) => {
               onClick={() => handleJobClick(job._id)}
               sx={{ cursor: 'pointer' }}
             >
+              <ListItemAvatar>
+                <Avatar>
+                  {/* Optional: Firmenlogo oder Recruiter-Avatar */}
+                  {job.recruiter && job.recruiter.name.charAt(0)}
+                </Avatar>
+              </ListItemAvatar>
               <ListItemText
                 primary={job.title}
                 secondary={
                   <>
-                    {job.location} • {new Date(job.datePosted).toLocaleDateString()}
+                    <Typography variant="body2" color="textSecondary">
+                      {job.location && `Ort: ${job.location.type === 'Point' ? `Longitude: ${job.location.coordinates[0]}, Latitude: ${job.location.coordinates[1]}` : job.location}`} • {new Date(job.datePosted).toLocaleDateString()}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Gehalt: {job.salary ? job.salary.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }) : 'Verhandelbar'}
+                    </Typography>
                     {(userRole === 'superAdmin' || userRole === 'admin') && job.recruiter && (
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="textSecondary">
                         Recruiter: {job.recruiter.name}
                       </Typography>
                     )}
@@ -249,8 +319,8 @@ const MyJobs = ({ userRole }) => {
               />
               <ListItemSecondaryAction>
                 <IconButton onClick={() => handleApplicantsClick(job._id)}>
-                  {job.hasNewApplicants ? (
-                    <Badge badgeContent={job.applicantCount} color="error">
+                  {job.newApplicantCount > 0 ? (
+                    <Badge badgeContent={job.newApplicantCount} color="error">
                       <NotificationsActiveIcon color="error" />
                     </Badge>
                   ) : (
@@ -261,6 +331,7 @@ const MyJobs = ({ userRole }) => {
             </ListItem>
           </Paper>
         ))}
+
         {/* "Neuen Job erstellen" Container */}
         {userRole !== 'viewer' && (
           <Paper sx={{ marginBottom: 2 }}>

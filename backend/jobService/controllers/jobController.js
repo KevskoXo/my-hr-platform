@@ -197,35 +197,30 @@ exports.getJobsByCompany = async (req, res) => {
     }
   };
   
-  // POST /jobs/:jobId/markAsViewed
-  exports.markJobAsViewed = async (req, res) => {
-    try {
-      const jobId = req.params.jobId;
-  
+
+// jobService/controllers/jobController.js
+
+exports.markJobAsViewed = async (req, res) => {
+  const { jobId } = req.params;
+
+  try {
       const job = await Job.findById(jobId);
-  
       if (!job) {
-        return res.status(404).json({ message: 'Job nicht gefunden' });
+          return res.status(404).json({ message: 'Job nicht gefunden' });
       }
-  
-      // Berechtigungsprüfung
-      if (req.user.role === 'recruiter' && job.recruiter.toString() !== req.user.id) {
-        return res.status(403).json({ message: 'Zugriff verweigert' });
-      }
-  
-      if (req.user.role === 'admin' && job.company.toString() !== req.user.company) {
-        return res.status(403).json({ message: 'Zugriff verweigert' });
-      }
-  
-      // Job als angesehen markieren
-      job.hasNewApplicants = false;
+
+      // Setze den newApplicantCount zurück
+      job.newApplicantCount = 0;
+
       await job.save();
-  
-      res.json({ message: 'Job als angesehen markiert' });
-    } catch (error) {
-      res.status(500).json({ message: 'Fehler beim Aktualisieren des Jobs' });
-    }
-  };
+
+      res.status(200).json({ message: 'Neue Bewerber als angesehen markiert', job });
+  } catch (error) {
+      console.error('Fehler beim Aktualisieren des Job-Status:', error);
+      res.status(500).json({ message: 'Fehler beim Aktualisieren des Job-Status' });
+  }
+};
+
   
 
 // Update a job by ID
@@ -246,5 +241,33 @@ exports.updateJob = async (req, res) => {
     res.json(job);
   } catch (error) {
     res.status(500).json({ message: 'Fehler beim Aktualisieren des Jobs' });
+  }
+};
+
+
+// jobService/controllers/jobController.js
+
+exports.addApplicant = async (req, res) => {
+  const { jobId, applicantId } = req.body;
+
+  try {
+      const job = await Job.findById(jobId);
+      if (!job) {
+          return res.status(404).json({ message: 'Job nicht gefunden' });
+      }
+
+      // Beispiel: Bewerber zu einer Bewerberliste hinzufügen
+      // job.applicants.push(applicantId); // Falls du eine Bewerberliste hast
+
+      // Erhöhe die Zähler
+      job.applicantCount += 1;
+      job.newApplicantCount += 1;
+
+      await job.save();
+
+      res.status(200).json({ message: 'Bewerber hinzugefügt', job });
+  } catch (error) {
+      console.error('Fehler beim Hinzufügen des Bewerbers:', error);
+      res.status(500).json({ message: 'Fehler beim Hinzufügen des Bewerbers' });
   }
 };

@@ -1,3 +1,5 @@
+// src/components/RecruiterJobPage.js
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -12,7 +14,6 @@ import createAxiosInstance from '../services/axiosInstance';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import SettingsIcon from '@mui/icons-material/Settings';
 import BackButton from '../components/BackButton';
-
 
 const RecruiterJobPage = () => {
   const { jobId } = useParams();
@@ -44,6 +45,20 @@ const RecruiterJobPage = () => {
           }
         } else {
           jobData.skills = [];
+        }
+
+        // Überprüfen und Konvertieren von jobData.tasks in ein Array
+        if (jobData.tasks) {
+          if (typeof jobData.tasks === 'string') {
+            jobData.tasks = jobData.tasks.split(';');
+          } else if (Array.isArray(jobData.tasks)) {
+            // Nichts tun, es ist bereits ein Array
+          } else {
+            // Falls tasks ein anderes Format hat, initialisieren wir es als leeres Array
+            jobData.tasks = [];
+          }
+        } else {
+          jobData.tasks = [];
         }
 
         setJob(jobData);
@@ -82,7 +97,10 @@ const RecruiterJobPage = () => {
               {job.company.name}
             </Typography>
             <Typography variant="subtitle1">
-              {job.location} • {new Date(job.datePosted).toLocaleDateString()}
+              {job.location && job.location.type === 'Point'
+                ? `Longitude: ${job.location.coordinates[0]}, Latitude: ${job.location.coordinates[1]}`
+                : job.location
+              } • {new Date(job.datePosted).toLocaleDateString('de-DE')}
             </Typography>
           </Grid>
           {/* Zahnrad-Icon für berechtigte Benutzer */}
@@ -115,7 +133,7 @@ const RecruiterJobPage = () => {
               <strong>Startdatum:</strong>
             </Typography>
             <Typography variant="body1">
-              {job.startDate ? new Date(job.startDate).toLocaleDateString() : 'Nicht angegeben'}
+              {job.startDate ? new Date(job.startDate).toLocaleDateString('de-DE') : 'Nicht angegeben'}
             </Typography>
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -123,7 +141,9 @@ const RecruiterJobPage = () => {
               <strong>Gehalt:</strong>
             </Typography>
             <Typography variant="body1">
-              {job.salary || 'Nicht angegeben'}
+              {job.salary
+                ? job.salary.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
+                : 'Verhandelbar'}
             </Typography>
           </Grid>
         </Grid>
@@ -138,6 +158,25 @@ const RecruiterJobPage = () => {
           {job.description}
         </Typography>
       </Paper>
+
+      {/* Gewünschte Aufgaben */}
+      {job.tasks && job.tasks.length > 0 && (
+        <Paper sx={{ padding: 2, marginBottom: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Gewünschte Aufgaben
+          </Typography>
+          <Grid container spacing={1}>
+            {job.tasks.map((task, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center' }}>
+                  <FiberManualRecordIcon sx={{ fontSize: 8, marginRight: 1 }} />
+                  {task}
+                </Typography>
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      )}
 
       {/* Gewünschte Fähigkeiten */}
       {job.skills && job.skills.length > 0 && (
