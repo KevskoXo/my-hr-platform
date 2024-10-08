@@ -46,7 +46,7 @@ const jobSchema = new mongoose.Schema({
     assignedViewers: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Viewer',
+            ref: 'Recruiter',
         },
     ],
     skills: [{

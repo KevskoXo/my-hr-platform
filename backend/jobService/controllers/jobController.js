@@ -43,11 +43,16 @@ exports.getAllJobs = async (req, res) => {
 };
 
 
-// Get a single job by ID
+// Get a single job by ID with populated recruiter and assignedViewers
+// jobService/controllers/jobController.js
 exports.getJobById = async (req, res) => {
   try {
-      const job = await Job.findById(req.params.id).populate('recruiter', 'name email');
+      const job = await Job.findById(req.params.id)
+          .populate('recruiter', 'name email')
+          .populate('assignedViewers', 'name email'); // Populiere die Viewer
+
       if (!job) return res.status(404).json({ message: 'Job not found' });
+
       res.json(job);
   } catch (err) {
       res.status(500).json({ message: err.message });
@@ -55,16 +60,6 @@ exports.getJobById = async (req, res) => {
 };
 
 
-// Update a job by ID
-exports.updateJob = async (req, res) => {
-    try {
-        const job = await Job.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!job) return res.status(404).json({ message: 'Job not found' });
-        res.json(job);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-};
 
 // Delete a job by ID
 exports.deleteJob = async (req, res) => {
@@ -223,7 +218,7 @@ exports.markJobAsViewed = async (req, res) => {
 
   
 
-// Update a job by ID
+//Update a job by ID
 exports.updateJob = async (req, res) => {
   try {
     const jobId = req.params.jobId;

@@ -570,3 +570,19 @@ exports.getRecruiters = async (req, res) => {
       res.status(500).json({ message: 'Fehler beim Abrufen der Recruiter' });
     }
   };
+
+  
+  // Controller zum Abrufen von Viewern
+exports.getViewers = async (req, res) => {
+    try {
+        const companyId = req.user.company; // Annahme: Benutzer sind einem Unternehmen zugeordnet
+
+        // Suche nach Recruitern mit der Rolle 'viewer' innerhalb des Unternehmens
+        const viewers = await Recruiter.find({ company: companyId, role: 'viewer' }).select('name email');
+
+        res.status(200).json(viewers);
+    } catch (error) {
+        console.error('Fehler beim Abrufen der Viewer:', error);
+        res.status(500).json({ error: 'Serverfehler beim Abrufen der Viewer' });
+    }
+};

@@ -8,17 +8,18 @@ import {
   Button,
   Paper,
   Grid,
-  MenuItem,
   Snackbar,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import createAxiosInstance from '../services/axiosInstance';
-import Autocomplete from '@mui/material/Autocomplete'; // Für Autovervollständigung
+import Autocomplete from '@mui/material/Autocomplete';
 
 const employmentTypes = ['Vollzeit', 'Teilzeit', 'Freelance', 'Praktikum', 'Werkstudent', 'Andere'];
-
-// Beispiel für häufig verwendete Skills und Tasks für Autovervollständigung
 const commonSkills = ['JavaScript', 'Python', 'React', 'Node.js', 'Machine Learning', 'Projektmanagement', 'Marketing', 'Vertrieb', 'Finanzen', 'HR', 'Design', 'Andere'];
 const commonTasks = ['Entwicklung', 'Design', 'Testing', 'Marketingkampagnen', 'Projektplanung', 'Kundensupport', 'Vertriebsgespräche', 'Finanzanalyse', 'HR-Management', 'Andere'];
 
@@ -26,17 +27,23 @@ const RecruiterJobEditPage = () => {
   const { jobId } = useParams();
   const [jobData, setJobData] = useState(null);
   const [formData, setFormData] = useState({});
+  const [recruiters, setRecruiters] = useState([]);
+  const [viewers, setViewers] = useState([]);
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
   const userRole = localStorage.getItem('role');
 
-  // Memoize the axiosInstance to prevent it from changing on every render
   const axiosInstance = useMemo(() => createAxiosInstance('jobs'), []);
+  const axiosRecruiterInstance = useMemo(() => createAxiosInstance('recruiters'), []);
+  const axiosViewerInstance = useMemo(() => createAxiosInstance('recruiters'), []); // Da Viewer auch Recruiter sind
 
-  // Snackbar state
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+  const [isJobLoaded, setIsJobLoaded] = useState(false);
+  const [isRecruitersLoaded, setIsRecruitersLoaded] = useState(false);
+  const [isViewersLoaded, setIsViewersLoaded] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -48,6 +55,8 @@ const RecruiterJobEditPage = () => {
         });
         const jobData = response.data;
 
+        console.log('Fetched Job Data:', jobData); // Debugging
+
         // Überprüfen und Konvertieren von jobData.skills in ein Array
         if (jobData.skills) {
           if (typeof jobData.skills === 'string') {
@@ -55,7 +64,6 @@ const RecruiterJobEditPage = () => {
           } else if (Array.isArray(jobData.skills)) {
             // Nichts tun, es ist bereits ein Array
           } else {
-            // Falls skills ein anderes Format hat, initialisieren wir es als leeres Array
             jobData.skills = [];
           }
         } else {
@@ -69,7 +77,6 @@ const RecruiterJobEditPage = () => {
           } else if (Array.isArray(jobData.tasks)) {
             // Nichts tun, es ist bereits ein Array
           } else {
-            // Falls tasks ein anderes Format hat, initialisieren wir es als leeres Array
             jobData.tasks = [];
           }
         } else {
@@ -77,7 +84,7 @@ const RecruiterJobEditPage = () => {
         }
 
         setJobData(jobData);
-        setFormData(jobData);
+        setIsJobLoaded(true);
       } catch (error) {
         console.error('Fehler beim Abrufen des Jobs:', error);
         setSnackbarMessage('Fehler beim Abrufen des Jobs.');
@@ -86,8 +93,63 @@ const RecruiterJobEditPage = () => {
       }
     };
 
+    const fetchRecruiters = async () => {
+      if (userRole === 'superAdmin' || userRole === 'admin') {
+        try {
+          const response = await axiosRecruiterInstance.get('/recruiters', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setRecruiters(response.data);
+          console.log('Fetched Recruiters:', response.data); // Debugging
+          setIsRecruitersLoaded(true);
+        } catch (error) {
+          console.error('Fehler beim Abrufen der Recruiter:', error);
+        }
+      } else {
+        setIsRecruitersLoaded(true); // Keine Recruiter abzurufen, trotzdem setzen
+      }
+    };
+
+    const fetchViewers = async () => {
+      try {
+        const response = await axiosViewerInstance.get('/viewers', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setViewers(response.data);
+        console.log('Fetched Viewers:', response.data); // Debugging
+        setIsViewersLoaded(true);
+      } catch (error) {
+        console.error('Fehler beim Abrufen der Viewer:', error);
+      }
+    };
+
     fetchJob();
-  }, [jobId, axiosInstance, token]);
+    fetchRecruiters();
+    fetchViewers();
+  }, [jobId, axiosInstance, axiosRecruiterInstance, axiosViewerInstance, token, userRole]);
+
+  // Setzen des formData nur, wenn alle Daten geladen sind
+  useEffect(() => {
+    if (isJobLoaded && isViewersLoaded && (userRole !== 'superAdmin' && userRole !== 'admin' || isRecruitersLoaded)) {
+      if (jobData) {
+        setFormData({
+          ...jobData,
+          recruiter: jobData.recruiter ? jobData.recruiter._id.toString() : null,
+          assignedViewers: jobData.assignedViewers ? jobData.assignedViewers.map(viewer => viewer._id.toString()) : [],
+        });
+
+        console.log('Form Data after setting:', {
+          ...jobData,
+          recruiter: jobData.recruiter ? jobData.recruiter._id.toString() : null,
+          assignedViewers: jobData.assignedViewers ? jobData.assignedViewers.map(viewer => viewer._id.toString()) : [],
+        }); // Debugging
+      }
+    }
+  }, [isJobLoaded, isRecruitersLoaded, isViewersLoaded, jobData, userRole]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -109,14 +171,25 @@ const RecruiterJobEditPage = () => {
     setFormData({ ...formData, tasks: value });
   };
 
+  const handleRecruiterChange = (event, value) => {
+    setFormData({ ...formData, recruiter: value ? value._id.toString() : null });
+    console.log('Selected Recruiter:', value); // Debugging
+  };
+
+  const handleViewersChange = (event, value) => {
+    setFormData({ ...formData, assignedViewers: value.map(viewer => viewer._id.toString()) });
+    console.log('Selected Viewers:', value); // Debugging
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axiosInstance.put(`/${jobId}`, formData, {
+      const response = await axiosInstance.put(`/${jobId}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log('Update Response:', response.data); // Debugging
       setSnackbarMessage('Job erfolgreich aktualisiert!');
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
@@ -136,7 +209,7 @@ const RecruiterJobEditPage = () => {
     setOpenSnackbar(false);
   };
 
-  if (!jobData) {
+  if (!isJobLoaded || !isViewersLoaded || ((userRole === 'superAdmin' || userRole === 'admin') && !isRecruitersLoaded)) {
     return <Typography>Lädt...</Typography>;
   }
 
@@ -184,20 +257,22 @@ const RecruiterJobEditPage = () => {
             </Grid>
             {/* Anstellungstyp */}
             <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                label="Anstellungstyp"
-                name="employmentType"
-                value={formData.employmentType || ''}
-                onChange={handleInputChange}
-                fullWidth
-              >
-                {employmentTypes.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <FormControl fullWidth>
+                <InputLabel id="employment-type-label">Anstellungstyp</InputLabel>
+                <Select
+                  labelId="employment-type-label"
+                  label="Anstellungstyp"
+                  name="employmentType"
+                  value={formData.employmentType || ''}
+                  onChange={handleInputChange}
+                >
+                  {employmentTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             {/* Startdatum */}
             <Grid item xs={12} sm={6}>
@@ -259,6 +334,45 @@ const RecruiterJobEditPage = () => {
                     placeholder="Fähigkeiten hinzufügen"
                   />
                 )}
+              />
+            </Grid>
+            {/* Recruiter-Input: Nur für superAdmin und admin sichtbar */}
+            {(userRole === 'superAdmin' || userRole === 'admin') && (
+              <Grid item xs={12}>
+                <Autocomplete
+                  options={recruiters}
+                  getOptionLabel={(option) => option.name}
+                  value={recruiters.find(r => r._id.toString() === formData.recruiter) || null}
+                  onChange={handleRecruiterChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="outlined"
+                      label="Recruiter auswählen"
+                      placeholder="Recruiter hinzufügen"
+                    />
+                  )}
+                  isOptionEqualToValue={(option, value) => option._id.toString() === value._id.toString()}
+                />
+              </Grid>
+            )}
+            {/* Viewer-Input: Für alle Benutzer sichtbar */}
+            <Grid item xs={12}>
+              <Autocomplete
+                multiple
+                options={viewers}
+                getOptionLabel={(option) => option.name}
+                value={viewers.filter(viewer => formData.assignedViewers?.includes(viewer._id.toString())) || []}
+                onChange={handleViewersChange}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    label="Viewer auswählen"
+                    placeholder="Viewer hinzufügen"
+                  />
+                )}
+                isOptionEqualToValue={(option, value) => option._id.toString() === value._id.toString()}
               />
             </Grid>
             {/* Video URL */}

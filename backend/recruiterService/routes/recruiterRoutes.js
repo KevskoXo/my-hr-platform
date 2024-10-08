@@ -35,6 +35,9 @@ router.get('/profile', auth(['recruiter', 'admin', 'superAdmin']), recruiterCont
 // Refresh Token Route (öffentlich)
 router.post('/refresh-token', recruiterController.refreshToken);
 
+// Route zum Abrufen von Viewern (zugänglich für alle authentifizierten Benutzer)
+router.get('/viewers', auth(['recruiter', 'admin', 'superAdmin', 'viewer']), recruiterController.getViewers);
+
 // Logout Route (geschützt)
 router.post('/logout', auth(['recruiter']), recruiterController.logout);
 
