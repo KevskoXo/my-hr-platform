@@ -1,6 +1,6 @@
 // src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 // eslint-disable-next-line import/no-unresolved
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleSelection from './components/RoleSelection';
@@ -17,10 +17,21 @@ import RegisterNewRecruiterPage from './pages/RegisterNewRecruiterPage';
 import RecruiterUserSearchPage from './pages/RecruiterUserSearchPage';
 import RecruiterJobPage from './pages/RecruiterJobPage';
 import RecruiterJobEditPage from './pages/RecruiterJobEditPage';
+import ChatWidget from './components/chatWidget';
 
-function App() {
+
+// Definiere die Routen, auf denen das ChatWidget nicht angezeigt werden soll
+const excludedRoutes = ['/login', '/register', '/register/jobseeker', '/register/recruiter'];
+
+const AppRoutes = () => {
+
+    const location = useLocation();
+
+    // Prüfe, ob die aktuelle Route in den ausgeschlossenen Routen enthalten ist
+    const shouldShowChatWidget = !excludedRoutes.includes(location.pathname);
+
     return (
-        <Router>
+        <>
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/" element={<Navigate to="/login" />} />
@@ -42,8 +53,18 @@ function App() {
                 <Route path="/recruiter/jobs/:jobId/edit" element={<ProtectedRoute allowedRoles={['recruiter', 'admin', 'superAdmin']}><RecruiterJobEditPage /></ProtectedRoute>} />
 
             </Routes>
-        </Router>
+            {/* Bedingtes Rendern des ChatWidgets */}
+            {shouldShowChatWidget && <ChatWidget />}
+        </>
     );
 }
+
+const App = () => {
+    return (
+      <Router>
+        <AppRoutes />
+      </Router>
+    );
+  };
 
 export default App;

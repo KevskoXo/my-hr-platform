@@ -266,3 +266,33 @@ exports.addApplicant = async (req, res) => {
       res.status(500).json({ message: 'Fehler beim Hinzufügen des Bewerbers' });
   }
 };
+
+
+// In deiner jobService.js oder ähnlichen Datei
+
+exports.getRecruiterByJobId = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId).populate('recruiter', 'name email');
+    if (!job) {
+      return res.status(404).json({ message: 'Job nicht gefunden' });
+    }
+    res.json(job.recruiter);
+  } catch (error) {
+    console.error('Fehler beim Abrufen des Recruiters:', error);
+    res.status(500).json({ message: 'Serverfehler' });
+  }
+};
+
+
+exports.getViewersByJobId = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId).populate('assignedViewers', 'name email');
+    if (!job) {
+      return res.status(404).json({ message: 'Job nicht gefunden' });
+    }
+    res.json(job.assignedViewers);
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Viewer:', error);
+    res.status(500).json({ message: 'Serverfehler' });
+  }
+};

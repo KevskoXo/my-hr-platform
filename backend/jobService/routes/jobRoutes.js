@@ -21,6 +21,10 @@ router.get('/byViewer', auth(['viewer']), jobController.getJobsByViewer);
 // POST /jobs/:jobId/markAsViewed
 router.post('/:jobId/markAsViewed', auth(['recruiter', 'superAdmin', 'admin']), jobController.markJobAsViewed);
 
+router.get('/:jobId/recruiter', auth(['superAdmin', 'admin']), jobController.getRecruiterByJobId);
+
+router.get('/:jobId/viewers', auth(['recruiter', 'superAdmin', 'admin']), jobController.getViewersByJobId);
+
 // Update a job
 router.put('/:jobId', auth(['recruiter', 'superAdmin', 'admin']), jobController.updateJob);
 
