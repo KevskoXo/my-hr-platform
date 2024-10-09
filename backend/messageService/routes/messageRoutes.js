@@ -1,17 +1,24 @@
-// messageService/routes/messageRoutes.js
+// routes/messageRoutes.js
 
 const express = require('express');
 const router = express.Router();
 const messageController = require('../controllers/messageController');
-const auth = require('../middleware/auth'); // Auth-Middleware importieren
+const auth = require('../middleware/auth'); // Authentifizierungs-Middleware
+const upload = require('../middleware/upload'); // Upload-Middleware
 
-// Neue Nachricht senden (nur für Recruiter)
-router.post('/send', auth(['recruiter']), messageController.sendMessage);
+// Route zum Senden einer Nachricht mit Datei-Upload
+router.post('/send', auth(['superAdmin', 'recruiter', 'admin', 'user']), upload.single('media'), messageController.sendMessage);
 
-// Nachrichten eines Nutzers abrufen (nur für User)
-router.get('/', auth(['user']), messageController.getUserMessages);
+// Route zum Abrufen von Nachrichten zwischen zwei Benutzern
+router.get('/:otherUserId/messages', auth(['superAdmin', 'recruiter', 'admin', 'user']), messageController.getMessages);
 
-// Nachrichten in einer spezifischen Konversation abrufen (für User und Recruiter)
-router.get('/conversation/:conversationId', auth(['user', 'recruiter']), messageController.getMessagesInConversation);
+// Route zum Markieren einer Nachricht als gelesen
+router.put('/:messageId/read', auth(['superAdmin', 'recruiter', 'admin', 'user']), messageController.markAsRead);
+
+// Route zum Hinzufügen einer Reaktion zu einer Nachricht
+router.post('/:messageId/reactions', auth(['superAdmin', 'recruiter', 'admin', 'user']), messageController.addReaction);
+
+// Route zum Abrufen der Konversationen des aktuellen Benutzers
+router.get('/conversations', auth(['superAdmin', 'recruiter', 'admin', 'user']), messageController.getConversations);
 
 module.exports = router;

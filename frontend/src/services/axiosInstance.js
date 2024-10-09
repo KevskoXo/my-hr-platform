@@ -3,12 +3,13 @@ import { jwtDecode } from 'jwt-decode';
 
 // Definition der Ports für die verschiedenen Services
 const SERVICE_PORTS = {
-  authentication: '5012/authentication',
-  jobs: '5001/jobs', // Beispiel: Port für Job-Service
-  resume: '5004/resume', // Beispiel: Port für Resume-Service
   users: '5000/users', //Port für user (JobSeeker)
+  jobs: '5001/jobs', // Beispiel: Port für Job-Service
   recruiters: '5002/recruiters', //Port für recruiter (superAdmin, admin, recruiter)
-  companies: '5003/companies'
+  companies: '5003/companies',
+  resume: '5004/resume', // Beispiel: Port für Resume-Service
+  messages: '5005/messages',
+  authentication: '5012/authentication'
   // Weitere Services nach Bedarf hinzufügen
 };
 

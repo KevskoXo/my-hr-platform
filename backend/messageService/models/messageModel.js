@@ -1,31 +1,56 @@
-// messageService/models/messageModel.js
+// models/Message.js
 
 const mongoose = require('mongoose');
 
-// Nachrichtenmodell
 const messageSchema = new mongoose.Schema({
-    sender: {
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Referenz auf das User-Modell
+    required: true,
+  },
+  receiver: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Referenz auf das User-Modell
+    required: true,
+  },
+  content: {
+    type: String,
+    required: false, // Optional, wenn Medien gesendet werden
+  },
+  media: {
+    type: String, // URL zur Mediendatei (z.B. Bild, Video)
+    required: false,
+  },
+  jobId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job', // Optional, falls Nachrichten jobbezogen sind
+    required: false,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  read: {
+    type: Boolean,
+    default: false,
+  },
+  // Erweiterungen
+  type: {
+    type: String,
+    enum: ['text', 'image', 'video', 'file'],
+    default: 'text',
+  },
+  reactions: [
+    {
+      user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
+      },
+      reaction: {
+        type: String, // z.B. 'like', 'love', 'laugh'
+      },
     },
-    recipient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-    },
-    content: {
-        type: String,
-        required: true,
-    },
-    timestamp: {
-        type: Date,
-        default: Date.now,
-    },
-    isRead: {
-        type: Boolean,
-        default: false,
-    },
+  ],
 });
 
 module.exports = mongoose.model('Message', messageSchema);
