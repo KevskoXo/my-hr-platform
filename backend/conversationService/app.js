@@ -2,9 +2,18 @@
 
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 require('dotenv').config(); // Lade Umgebungsvariablen aus der .env-Datei
 
 const app = express();
+
+// CORS-Konfiguration
+const corsOptions = {
+  origin: 'http://localhost:3000', // Setze die URL des Frontends ein
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true, // Cookies und andere Credentials erlauben
+};
+app.use(cors(corsOptions));
 
 // Middleware für JSON-Parsing
 app.use(express.json());
@@ -16,7 +25,7 @@ mongoose.connect(process.env.MONGO_URI_CONVERSATION)
 
 // Routen
 const conversationRoutes = require('./routes/conversationRoutes');
-app.use('/jobs', conversationRoutes);
+app.use('/conversations', conversationRoutes);
 
-const PORT = process.env.PORT_CONVERSATION|| 5001; // Ein anderer Port als der User Service
-app.listen(PORT, () => console.log(`DefaultService running on port ${PORT}`));
+const PORT = process.env.PORT_CONVERSATION || 5001; // Ein anderer Port als der User Service
+app.listen(PORT, () => console.log(`ConversationService running on port ${PORT}`));

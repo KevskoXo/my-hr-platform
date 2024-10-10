@@ -20,37 +20,36 @@ import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import { io } from 'socket.io-client';
-import createAxiosInstance from '../services/axiosInstance'; // Deine Axios-Instanz
+import createAxiosInstance from '../services/axiosInstance';
 import ConversationsList from './ConversationsList';
 
 const SOCKET_SERVER_URL = process.env.REACT_APP_SOCKET_SERVER_URL || 'http://localhost:5005';
 
-const axiosInstance = createAxiosInstance('messages'); // Verwende den 'messages' Service
+const axiosInstance = createAxiosInstance('messages');
+const conversationsAxiosInstance = createAxiosInstance('conversations'); // Für den ConversationsService
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
   const [typingUsers, setTypingUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null); // Für Datei-Uploads
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const socket = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
-    // Initialisiere die Socket-Verbindung
     const token = localStorage.getItem('accessToken');
     socket.current = io(SOCKET_SERVER_URL, {
-      query: { token }, // Sende das Token bei der Verbindung
+      query: { token },
     });
 
-    // Empfang von Nachrichten
     socket.current.on('receiveMessage', (message) => {
-      if (selectedUser && message.sender === selectedUser.id) {
+      if (selectedConversation && message.conversationId === selectedConversation._id) {
         setMessages((prevMessages) => [...prevMessages, message]);
         scrollToBottom();
       } else {
@@ -58,7 +57,6 @@ const ChatWidget = () => {
       }
     });
 
-    // Empfang von Typing-Status
     socket.current.on('typing', (data) => {
       const { senderId } = data;
       if (!typingUsers.includes(senderId)) {
@@ -71,17 +69,16 @@ const ChatWidget = () => {
       setTypingUsers((prev) => prev.filter((id) => id !== senderId));
     });
 
-    // Cleanup bei Komponentenunmount
     return () => {
       socket.current.disconnect();
     };
-  }, [selectedUser, typingUsers]);
+  }, [selectedConversation, typingUsers]);
 
   useEffect(() => {
-    if (isOpen && selectedUser) {
+    if (isOpen && selectedConversation) {
       fetchMessages();
     }
-  }, [isOpen, selectedUser]);
+  }, [isOpen, selectedConversation]);
 
   useEffect(() => {
     if (isOpen) {
@@ -92,9 +89,7 @@ const ChatWidget = () => {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/${selectedUser.id}/messages`, {
-        params: { page: 1, limit: 20 },
-      });
+      const response = await axiosInstance.get(`/conversation/${selectedConversation._id}`);
       setMessages(response.data.messages);
       setLoading(false);
       scrollToBottom();
@@ -108,15 +103,15 @@ const ChatWidget = () => {
   const toggleDrawer = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
-      setSelectedUser(null);
+      setSelectedConversation(null);
       setMessages([]);
       setTypingUsers([]);
       setUnreadCount(0);
     }
   };
 
-  const handleSelectConversation = (user) => {
-    setSelectedUser(user);
+  const handleSelectConversation = (conversation) => {
+    setSelectedConversation(conversation);
     setIsOpen(true);
     setMessages([]);
     setTypingUsers([]);
@@ -127,16 +122,15 @@ const ChatWidget = () => {
     if (newMessage.trim() === '' && !selectedFile) return;
 
     const formData = new FormData();
-    formData.append('receiverId', selectedUser.id);
+    formData.append('conversationId', selectedConversation._id);
     formData.append('content', newMessage);
-    formData.append('type', selectedFile ? 'image' : 'text'); // Beispiel: 'image' für Bilder
+    formData.append('type', selectedFile ? 'image' : 'text');
 
     if (selectedFile) {
       formData.append('media', selectedFile);
     }
 
     try {
-      // Sende die Nachricht über die REST-API
       const response = await axiosInstance.post('/send', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -144,12 +138,9 @@ const ChatWidget = () => {
       });
 
       const savedMessage = response.data;
-
-      // Sende die Nachricht über Socket.IO für Echtzeit-Kommunikation
       socket.current.emit('sendMessage', {
-        receiverId: savedMessage.receiver,
+        conversationId: savedMessage.conversationId,
         content: savedMessage.content,
-        jobId: savedMessage.jobId,
         type: savedMessage.type,
         media: savedMessage.media,
       });
@@ -165,15 +156,14 @@ const ChatWidget = () => {
 
   const handleTyping = (e) => {
     setNewMessage(e.target.value);
-    socket.current.emit('typing', { receiverId: selectedUser.id });
+    socket.current.emit('typing', { conversationId: selectedConversation._id });
 
-    // Setze den Typing-Timeout zurück
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      socket.current.emit('stopTyping', { receiverId: selectedUser.id });
+      socket.current.emit('stopTyping', { conversationId: selectedConversation._id });
     }, 3000);
   };
 
@@ -189,7 +179,6 @@ const ChatWidget = () => {
 
   return (
     <>
-      {/* Floating Chat Icon */}
       <Box
         sx={{
           position: 'fixed',
@@ -205,23 +194,21 @@ const ChatWidget = () => {
         </IconButton>
       </Box>
 
-      {/* Chat Drawer */}
       <Drawer
         anchor="right"
         open={isOpen}
         onClose={toggleDrawer}
         PaperProps={{
-          sx: { width: { xs: '100%', sm: 400 } }, // Responsive Breite
+          sx: { width: { xs: '100%', sm: 400 } },
         }}
       >
         <Box sx={{ padding: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {/* Header */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {selectedUser ? (
+            {selectedConversation ? (
               <>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Avatar src={selectedUser.avatar} alt={selectedUser.name} sx={{ marginRight: 1 }} />
-                  <Typography variant="h6">{selectedUser.name}</Typography>
+                  <Avatar src={selectedConversation.participants[0].avatar} alt={selectedConversation.participants[0].name} sx={{ marginRight: 1 }} />
+                  <Typography variant="h6">{selectedConversation.participants[0].name}</Typography>
                 </Box>
                 <IconButton onClick={toggleDrawer}>
                   <CloseIcon />
@@ -237,10 +224,8 @@ const ChatWidget = () => {
             )}
           </Box>
 
-          {/* Inhalt */}
-          {selectedUser ? (
+          {selectedConversation ? (
             <>
-              {/* Nachrichtenliste */}
               <Box sx={{ flexGrow: 1, overflowY: 'auto', marginTop: 2 }}>
                 {loading ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -261,7 +246,6 @@ const ChatWidget = () => {
                             <>
                               {msg.type === 'text' && <span>{msg.content}</span>}
                               {msg.type === 'image' && <img src={msg.media} alt="Gesendet" style={{ maxWidth: '100%', borderRadius: '8px' }} />}
-                              {/* Weitere Medientypen können hier hinzugefügt werden */}
                             </>
                           }
                           sx={{
@@ -276,17 +260,15 @@ const ChatWidget = () => {
                       </ListItem>
                     ))}
                     <div ref={messagesEndRef} />
-                    {/* "Is Typing" Indikator */}
-                    {typingUsers.includes(selectedUser.id) && (
+                    {typingUsers.includes(selectedConversation._id) && (
                       <Typography variant="body2" color="textSecondary" sx={{ marginLeft: 'auto', marginRight: 'auto' }}>
-                        {selectedUser.name} tippt...
+                        {selectedConversation.participants[0].name} tippt...
                       </Typography>
                     )}
                   </List>
                 )}
               </Box>
 
-              {/* Eingabefeld und Datei-Upload */}
               <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
                 <TextField
                   variant="outlined"
@@ -316,7 +298,6 @@ const ChatWidget = () => {
                   <SendIcon />
                 </IconButton>
               </Box>
-              {/* Anzeige ausgewählter Datei */}
               {selectedFile && (
                 <Box sx={{ marginTop: 1, display: 'flex', alignItems: 'center' }}>
                   <Typography variant="body2">{selectedFile.name}</Typography>
@@ -327,7 +308,6 @@ const ChatWidget = () => {
               )}
             </>
           ) : (
-            // Konversationsliste anzeigen, wenn kein Benutzer ausgewählt ist
             <ConversationsList onSelectConversation={handleSelectConversation} />
           )}
         </Box>

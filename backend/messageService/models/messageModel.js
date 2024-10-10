@@ -3,15 +3,20 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
-  sender: {
+  conversationId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Referenz auf das User-Modell
+    ref: 'Conversation',
     required: true,
   },
-  receiver: {
+  sender: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Referenz auf das User-Modell
+    refPath: 'senderModel',
     required: true,
+  },
+  senderModel: {
+    type: String,
+    required: true,
+    enum: ['User', 'Recruiter'],
   },
   content: {
     type: String,
@@ -21,20 +26,16 @@ const messageSchema = new mongoose.Schema({
     type: String, // URL zur Mediendatei (z.B. Bild, Video)
     required: false,
   },
-  jobId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job', // Optional, falls Nachrichten jobbezogen sind
-    required: false,
-  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-  read: {
-    type: Boolean,
-    default: false,
-  },
-  // Erweiterungen
+  readBy: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      refPath: 'senderModel', // Referenz auf die Benutzer (User oder Recruiter), die die Nachricht gelesen haben
+    },
+  ],
   type: {
     type: String,
     enum: ['text', 'image', 'video', 'file'],
@@ -44,7 +45,7 @@ const messageSchema = new mongoose.Schema({
     {
       user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        refPath: 'senderModel',
       },
       reaction: {
         type: String, // z.B. 'like', 'love', 'laugh'

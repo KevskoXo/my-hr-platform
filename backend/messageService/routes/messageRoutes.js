@@ -6,19 +6,30 @@ const messageController = require('../controllers/messageController');
 const auth = require('../middleware/auth'); // Authentifizierungs-Middleware
 const upload = require('../middleware/upload'); // Upload-Middleware
 
-// Route zum Senden einer Nachricht mit Datei-Upload
-router.post('/send', auth(['superAdmin', 'recruiter', 'admin', 'user']), upload.single('media'), messageController.sendMessage);
+// Nachricht senden
+router.post('/send', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.sendMessage);
 
-// Route zum Abrufen von Nachrichten zwischen zwei Benutzern
-router.get('/:otherUserId/messages', auth(['superAdmin', 'recruiter', 'admin', 'user']), messageController.getMessages);
+// Nachrichten einer Konversation abrufen
+router.get('/conversation/:conversationId', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.getMessagesByConversation);
 
-// Route zum Markieren einer Nachricht als gelesen
-router.put('/:messageId/read', auth(['superAdmin', 'recruiter', 'admin', 'user']), messageController.markAsRead);
+// Nachricht als gelesen markieren
+router.patch('/:messageId/read', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.markMessageAsRead);
 
-// Route zum Hinzufügen einer Reaktion zu einer Nachricht
-router.post('/:messageId/reactions', auth(['superAdmin', 'recruiter', 'admin', 'user']), messageController.addReaction);
+// Nachricht löschen
+router.delete('/:messageId', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.deleteMessage);
 
-// Route zum Abrufen der Konversationen des aktuellen Benutzers
-router.get('/conversations', auth(['superAdmin', 'recruiter', 'admin', 'user']), messageController.getConversations);
+// Nachricht bearbeiten
+router.patch('/:messageId/edit', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.editMessage);
+
+// Reaktion hinzufügen
+router.post('/:messageId/reaction', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.addReaction);
+
+// Reaktion entfernen
+router.delete('/:messageId/reaction', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.removeReaction);
+
+// Schreibstatus setzen
+router.post('/typing', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.setTypingStatus);
+
+
 
 module.exports = router;

@@ -1,202 +1,186 @@
-// controllers/messageController.js
+// messageService/controllers/messageController.js
 
 const Message = require('../models/messageModel');
+const axios = require('axios');
+const { io } = require('../server'); // Importiere Socket.IO-Instanz
 
-// Senden einer Nachricht mit optionalem Medieninhalt
-const sendMessage = async (req, res) => {
+// Nachricht senden
+exports.sendMessage = async (req, res) => {
+    try {
+        const { conversationId, content, media, type } = req.body;
+        const senderId = req.user.userId;
+
+        // Neue Nachricht erstellen
+        const newMessage = new Message({
+            sender: senderId,
+            conversation: conversationId,
+            content,
+            media,
+            type,
+        });
+
+        await newMessage.save();
+
+        // Aktualisiere das „updatedAt“-Feld der Konversation
+        await axios.put(
+            `http://localhost:${process.env.PORT_CONVERSATION}/conversations/update/${conversationId}`,
+            { lastActivity: new Date() }
+        );
+
+        // Sende die Nachricht an alle Teilnehmer in der Konversation in Echtzeit
+        io.to(conversationId).emit('newMessage', newMessage);
+
+        res.status(201).json(newMessage);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Nachrichten einer Konversation abrufen
+exports.getMessagesByConversation = async (req, res) => {
   try {
-    const { receiverId, content, jobId, type } = req.body;
-    const senderId = req.user.id;
+    const { conversationId } = req.params;
+    
+    console.log('Received Conversation ID:', conversationId); // Debug-Ausgabe
 
-    // Handle hochgeladene Datei
-    let media = '';
-    if (req.file) {
-      media = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
+
+    if (!messages.length) {
+      return res.status(404).json({ error: 'No messages found for this conversation' });
     }
 
-    if (!receiverId && !media) {
-      return res.status(400).json({ message: 'Empfänger oder Medieninhalt sind erforderlich.' });
-    }
-
-    const newMessage = new Message({
-      sender: senderId,
-      receiver: receiverId,
-      content: content || '',
-      jobId: jobId || null,
-      media: media || '',
-      type: type || (media ? 'image' : 'text'),
-    });
-
-    await newMessage.save();
-
-    // Emit an event via Socket.IO to send the message in real-time
-    req.io.to(receiverId.toString()).emit('receiveMessage', newMessage);
-
-    res.status(201).json(newMessage);
+    res.status(200).json(messages);
   } catch (error) {
-    console.error('Fehler beim Senden der Nachricht:', error);
-    res.status(500).json({ message: 'Serverfehler beim Senden der Nachricht.' });
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ error: 'Error fetching messages' });
   }
 };
 
-// Abrufen von Nachrichten zwischen zwei Benutzern
-const getMessages = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { otherUserId } = req.params;
-    const { page = 1, limit = 20 } = req.query;
 
-    const messages = await Message.find({
-      $or: [
-        { sender: userId, receiver: otherUserId },
-        { sender: otherUserId, receiver: userId },
-      ],
-    })
-      .sort({ createdAt: 1 }) // Älteste zuerst
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .populate('sender', 'name email avatar') // Benutzerinformationen einfügen
-      .populate('receiver', 'name email avatar');
 
-    const count = await Message.countDocuments({
-      $or: [
-        { sender: userId, receiver: otherUserId },
-        { sender: otherUserId, receiver: userId },
-      ],
-    });
+// Nachricht als gelesen markieren
+exports.markMessageAsRead = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const userId = req.user.userId;
 
-    res.status(200).json({
-      messages,
-      totalPages: Math.ceil(count / limit),
-      currentPage: page,
-    });
-  } catch (error) {
-    console.error('Fehler beim Abrufen der Nachrichten:', error);
-    res.status(500).json({ message: 'Serverfehler beim Abrufen der Nachrichten.' });
-  }
-};
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
 
-// Markieren einer Nachricht als gelesen
-const markAsRead = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { messageId } = req.params;
+        if (message.receiver.toString() !== userId) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
 
-    const message = await Message.findOne({ _id: messageId, receiver: userId });
+        message.read = true;
+        await message.save();
 
-    if (!message) {
-      return res.status(404).json({ message: 'Nachricht nicht gefunden.' });
+        res.status(200).json({ message: 'Message marked as read' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    message.read = true;
-    await message.save();
-
-    res.status(200).json({ message: 'Nachricht als gelesen markiert.', data: message });
-  } catch (error) {
-    console.error('Fehler beim Markieren der Nachricht:', error);
-    res.status(500).json({ message: 'Serverfehler beim Markieren der Nachricht.' });
-  }
 };
 
-// Hinzufügen einer Reaktion zu einer Nachricht
-const addReaction = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { messageId, reaction } = req.body;
+// Nachricht löschen
+exports.deleteMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const userId = req.user.userId;
 
-    const message = await Message.findById(messageId);
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
 
-    if (!message) {
-      return res.status(404).json({ message: 'Nachricht nicht gefunden.' });
+        if (message.sender.toString() !== userId) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        await Message.findByIdAndDelete(messageId);
+
+        res.status(200).json({ message: 'Message deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
+};
 
-    // Prüfe, ob der Benutzer bereits eine Reaktion hinzugefügt hat
-    const existingReactionIndex = message.reactions.findIndex(
-      (r) => r.user.toString() === userId
-    );
+// Nachricht bearbeiten
+exports.editMessage = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const { newContent } = req.body;
+        const userId = req.user.userId;
 
-    if (existingReactionIndex !== -1) {
-      // Aktualisiere die bestehende Reaktion
-      message.reactions[existingReactionIndex].reaction = reaction;
-    } else {
-      // Füge eine neue Reaktion hinzu
-      message.reactions.push({ user: userId, reaction });
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        if (message.sender.toString() !== userId) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        message.content = newContent;
+        await message.save();
+
+        res.status(200).json(message);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    await message.save();
-
-    res.status(200).json({ message: 'Reaktion hinzugefügt.', data: message });
-  } catch (error) {
-    console.error('Fehler beim Hinzufügen der Reaktion:', error);
-    res.status(500).json({ message: 'Serverfehler beim Hinzufügen der Reaktion.' });
-  }
 };
 
-// Abrufen der Konversationen des aktuellen Benutzers
-const getConversations = async (req, res) => {
-  try {
-    const userId = req.user.id;
+// Reaktion hinzufügen
+exports.addReaction = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const { reaction } = req.body;
+        const userId = req.user.userId;
 
-    // Aggregation, um die letzte Nachricht jeder Konversation zu erhalten
-    const conversations = await Message.aggregate([
-      {
-        $match: {
-          $or: [
-            { sender: mongoose.Types.ObjectId(userId) },
-            { receiver: mongoose.Types.ObjectId(userId) },
-          ],
-        },
-      },
-      {
-        $sort: { createdAt: -1 },
-      },
-      {
-        $group: {
-          _id: {
-            $cond: [
-              { $eq: ['$sender', mongoose.Types.ObjectId(userId)] },
-              '$receiver',
-              '$sender',
-            ],
-          },
-          lastMessage: { $first: '$content' },
-          createdAt: { $first: '$createdAt' },
-        },
-      },
-      {
-        $lookup: {
-          from: 'users', // Stelle sicher, dass der Collection-Name korrekt ist
-          localField: '_id',
-          foreignField: '_id',
-          as: 'user',
-        },
-      },
-      {
-        $unwind: '$user',
-      },
-      {
-        $project: {
-          user: { id: '$_id', name: '$user.name', email: '$user.email', avatar: '$user.avatar' },
-          lastMessage: 1,
-          createdAt: 1,
-        },
-      },
-      {
-        $sort: { createdAt: -1 },
-      },
-    ]);
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
 
-    res.status(200).json({ conversations });
-  } catch (error) {
-    console.error('Fehler beim Abrufen der Konversationen:', error);
-    res.status(500).json({ message: 'Serverfehler beim Abrufen der Konversationen.' });
-  }
+        message.reactions.push({ user: userId, reaction });
+        await message.save();
+
+        res.status(200).json(message);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
 
-module.exports = {
-  sendMessage,
-  getMessages,
-  markAsRead,
-  addReaction,
-  getConversations,
+// Reaktion entfernen
+exports.removeReaction = async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const { reaction } = req.body;
+        const userId = req.user.userId;
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        message.reactions = message.reactions.filter(
+            (r) => r.user.toString() !== userId || r.reaction !== reaction
+        );
+        await message.save();
+
+        res.status(200).json(message);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Schreibstatus setzen
+exports.setTypingStatus = (req, res) => {
+    const { conversationId, isTyping } = req.body;
+    const userId = req.user.userId;
+
+    // Sende den Schreibstatus an alle Teilnehmer der Konversation
+    io.to(conversationId).emit('typingStatus', { userId, isTyping });
+
+    res.status(200).json({ message: 'Typing status updated' });
 };

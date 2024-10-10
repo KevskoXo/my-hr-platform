@@ -17,7 +17,7 @@ import RegisterNewRecruiterPage from './pages/RegisterNewRecruiterPage';
 import RecruiterUserSearchPage from './pages/RecruiterUserSearchPage';
 import RecruiterJobPage from './pages/RecruiterJobPage';
 import RecruiterJobEditPage from './pages/RecruiterJobEditPage';
-import ChatWidget from './components/chatWidget';
+import ChatWidget from './components/ChatWidget';
 
 
 // Definiere die Routen, auf denen das ChatWidget nicht angezeigt werden soll

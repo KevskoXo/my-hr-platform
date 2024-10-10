@@ -1,27 +1,24 @@
-// app.js
+// messageService/app.js
 
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const http = require('http');
-const { Server } = require('socket.io');
 const cors = require('cors');
 const path = require('path');
-const messageRoutes = require('./routes/messageRoutes');
-const authMiddleware = require('./middleware/auth'); // Deine Authentifizierungs-Middleware
-const jwt = require('jsonwebtoken'); // Für die JWT-Verifizierung
-const Message = require('./models/messageModel');
 const fs = require('fs');
+
+const messageRoutes = require('./routes/messageRoutes');
+const Message = require('./models/messageModel');
+const { server, io } = require('./server'); // Importiere den Server und Socket.IO-Instanz
 
 dotenv.config(); // Lade Umgebungsvariablen aus der .env-Datei
 
 const app = express();
-const server = http.createServer(app);
 
 // Stelle sicher, dass das Upload-Verzeichnis existiert
 const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)){
-    fs.mkdirSync(uploadsDir);
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
 }
 
 // CORS-Konfiguration
@@ -41,33 +38,17 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Verbinde mit MongoDB
 mongoose.connect(process.env.MONGO_URI_MESSAGE)
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.log(err));
-
-// Socket.IO Setup mit denselben CORS-Optionen
-const io = new Server(server, {
-  cors: corsOptions, // Verwende die gleiche CORS-Konfiguration wie Express
-});
-
-// Socket.IO Authentifizierung Middleware
-io.use((socket, next) => {
-  const token = socket.handshake.query.token;
-  if (!token) {
-    return next(new Error('Unauthorized: No token provided'));
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.user = decoded; // Benutzerinformationen im Socket speichern
-    next();
-  } catch (err) {
-    console.error('Socket.IO Auth Error:', err.message);
-    next(new Error('Unauthorized: Invalid token'));
-  }
-});
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.log(err));
 
 // Socket.IO Verbindungen und Ereignisse
 io.on('connection', (socket) => {
+  if (!socket.user) {
+    console.error('User information is not available after authentication');
+    socket.disconnect();
+    return;
+  }
+
   console.log(`Benutzer verbunden: ${socket.user.id}`);
 
   // Benutzer zu einem Raum hinzufügen, basierend auf ihrer Benutzer-ID
@@ -79,6 +60,7 @@ io.on('connection', (socket) => {
     const senderId = socket.user.id;
 
     if (!receiverId && !media) {
+      console.error('Receiver ID or media is required to send a message');
       return;
     }
 
@@ -123,5 +105,6 @@ app.get('/', (req, res) => {
   res.send('MessageService läuft!');
 });
 
+// Server starten
 const PORT = process.env.PORT_MESSAGE || 5005;
 server.listen(PORT, () => console.log(`MessageService running on port ${PORT}`));

@@ -8,14 +8,14 @@ const ConversationsList = ({ onSelectConversation }) => {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Erstelle eine Axios-Instanz für den 'messages' Service
-  const axiosInstance = createAxiosInstance('messages');
+  // Erstelle eine Axios-Instanz für den 'conversations' Service
+  const axiosInstance = createAxiosInstance('conversations');
 
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const response = await axiosInstance.get('/conversations'); // Verwende die Instanz
-        setConversations(response.data.conversations);
+        const response = await axiosInstance.get('/user/' + localStorage.getItem('userId')); // Verwende die richtige Route zum Abrufen der Benutzer-Konversationen
+        setConversations(response.data);
         setLoading(false);
       } catch (error) {
         console.error('Fehler beim Abrufen der Konversationen:', error);
@@ -37,13 +37,13 @@ const ConversationsList = ({ onSelectConversation }) => {
   return (
     <List>
       {conversations.map((conv) => (
-        <React.Fragment key={conv.user.id}>
-          <ListItem button onClick={() => onSelectConversation(conv.user)}>
+        <React.Fragment key={conv._id}>
+          <ListItem button onClick={() => onSelectConversation(conv)}>
             <ListItemAvatar>
-              <Avatar src={conv.user.avatar} alt={conv.user.name} />
+              <Avatar src={conv.participants.find((p) => p.user !== localStorage.getItem('userId')).avatar} alt={conv.participants.find((p) => p.user !== localStorage.getItem('userId')).name} />
             </ListItemAvatar>
             <ListItemText
-              primary={conv.user.name}
+              primary={conv.participants.find((p) => p.user !== localStorage.getItem('userId')).name}
               secondary={conv.lastMessage || 'Keine Nachrichten'}
             />
           </ListItem>
