@@ -91,7 +91,7 @@ const ChatWidget = () => {
       setLoading(true);
       const response = await axiosInstance.get(`/conversation/${selectedConversation._id}`);
       console.log('hier sind wir mal');
-      setMessages(response.data.messages);
+      setMessages(response.data); //direkt statt response.data.messages
       setLoading(false);
       scrollToBottom();
       setUnreadCount(0);
@@ -135,6 +135,7 @@ const ChatWidget = () => {
       const response = await axiosInstance.post('/send', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
 

@@ -4,10 +4,12 @@ const express = require('express');
 const router = express.Router();
 const messageController = require('../controllers/messageController');
 const auth = require('../middleware/auth'); // Authentifizierungs-Middleware
-const upload = require('../middleware/upload'); // Upload-Middleware
+const multer = require('multer');
+//const upload = require('../middleware/upload'); // Upload-Middleware
+const upload = multer({ dest: 'uploads/' });
 
 // Nachricht senden
-router.post('/send', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.sendMessage);
+router.post('/send', auth(['user', 'admin', 'recruiter', 'superAdmin']), upload.single('media'), messageController.sendMessage);
 
 // Nachrichten einer Konversation abrufen
 //router.get('/conversation/:conversationId', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.getMessagesByConversation);

@@ -7,35 +7,65 @@ const { getIO } = require('../socket'); // Importiere Socket.IO-Instanz
 // Nachricht senden
 exports.sendMessage = async (req, res) => {
     try {
-        const { conversationId, content, media, type } = req.body;
+        console.log('req.user:', req.user);
+        console.log('req.body:', req.body);
+        console.log('req.file:', req.file);
+
+        const { conversationId, content, type } = req.body;
         const senderId = req.user.userId;
+
+        console.log('conversationId:', conversationId);
+        console.log('content:', content);
+        console.log('type:', type);
+        console.log('senderId:', senderId);
+
+        let mediaUrl = null;
+
+        // Wenn eine Datei hochgeladen wurde, verarbeite sie entsprechend
+        if (req.file) {
+            mediaUrl = req.file.path;
+            console.log('mediaUrl:', mediaUrl);
+        }
+        const senderType = req.user.role;
+
+        let senderModel = 'Recruiter';
+
+        if (senderType === 'user') {
+            senderModel = 'User';
+        }
+
 
         // Neue Nachricht erstellen
         const newMessage = new Message({
             sender: senderId,
-            conversation: conversationId,
+            senderModel: senderModel,
+            conversationId: conversationId,
             content,
-            media,
+            media: mediaUrl,
             type,
         });
 
         await newMessage.save();
+        console.log('Neue Nachricht gespeichert:', newMessage);
 
         // Aktualisiere das „updatedAt“-Feld der Konversation
-        await axios.put(
+        const updateResponse = await axios.put(
             `http://localhost:${process.env.PORT_CONVERSATION}/conversations/update/${conversationId}`,
             { lastActivity: new Date() }
         );
+        console.log('Conversations-Service-Antwort:', updateResponse.data);
 
-        // Sende die Nachricht an alle Teilnehmer in der Konversation in Echtzeit
+        // Sende die Nachricht an alle Teilnehmer in Echtzeit
         const io = getIO();
         io.to(conversationId).emit('newMessage', newMessage);
 
         return res.status(201).json(newMessage);
     } catch (error) {
-       return res.status(500).json({ error: error.message });
+        console.error('Fehler in sendMessage:', error);
+        return res.status(500).json({ error: error.message });
     }
 };
+
 
 // Nachrichten einer Konversation abrufen
 exports.getMessagesByConversation = async (req, res) => {
