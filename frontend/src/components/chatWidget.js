@@ -90,6 +90,7 @@ const ChatWidget = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(`/conversation/${selectedConversation._id}`);
+      console.log('hier sind wir mal');
       setMessages(response.data.messages);
       setLoading(false);
       scrollToBottom();

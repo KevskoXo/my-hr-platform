@@ -1,5 +1,3 @@
-// server.js
-
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -14,7 +12,7 @@ const server = http.createServer(app);
 
 // CORS Optionen
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: 'http://localhost:3000', // Frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 };
@@ -26,6 +24,7 @@ const io = new Server(server, {
   cors: corsOptions,
 });
 
+// Authentifizierung für Socket.IO-Verbindungen
 io.use((socket, next) => {
   const token = socket.handshake.query.token;
   if (!token) {
@@ -34,12 +33,21 @@ io.use((socket, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.user = decoded; // Benutzerinformationen im Socket speichern
+    socket.user = decoded.userId; // Benutzerinformationen im Socket speichern
     next();
   } catch (err) {
     console.error('Socket.IO Auth Error:', err.message);
     next(new Error('Unauthorized: Invalid token'));
   }
+});
+
+// Socket.IO-Verbindung und Events
+io.on('connection', (socket) => {
+  console.log(`Benutzer verbunden: ${socket.user}`);
+
+  socket.on('disconnect', () => {
+    console.log(`Benutzer getrennt: ${socket.user}`);
+  });
 });
 
 module.exports = { server, io };

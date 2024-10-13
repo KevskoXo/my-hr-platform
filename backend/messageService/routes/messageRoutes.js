@@ -10,7 +10,11 @@ const upload = require('../middleware/upload'); // Upload-Middleware
 router.post('/send', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.sendMessage);
 
 // Nachrichten einer Konversation abrufen
-router.get('/conversation/:conversationId', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.getMessagesByConversation);
+//router.get('/conversation/:conversationId', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.getMessagesByConversation);
+
+router.get('/conversation/:conversationId', messageController.getMessagesByConversation);
+
+router.get('/hallo', messageController.hallo);
 
 // Nachricht als gelesen markieren
 router.patch('/:messageId/read', auth(['user', 'admin', 'recruiter', 'superAdmin']), messageController.markMessageAsRead);

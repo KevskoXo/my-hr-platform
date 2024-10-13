@@ -49,15 +49,15 @@ io.on('connection', (socket) => {
     return;
   }
 
-  console.log(`Benutzer verbunden: ${socket.user.id}`);
+  console.log(`Benutzer verbunden: ${socket.user}`);
 
   // Benutzer zu einem Raum hinzufügen, basierend auf ihrer Benutzer-ID
-  socket.join(socket.user.id);
+  socket.join(socket.user);
 
   // Event zum Empfangen von Nachrichten
   socket.on('sendMessage', async (data) => {
     const { receiverId, content, jobId, media, type } = data;
-    const senderId = socket.user.id;
+    const senderId = socket.user;
 
     if (!receiverId && !media) {
       console.error('Receiver ID or media is required to send a message');
@@ -82,29 +82,33 @@ io.on('connection', (socket) => {
   // Event zum Anzeigen des Typing-Status
   socket.on('typing', (data) => {
     const { receiverId } = data;
-    io.to(receiverId.toString()).emit('typing', { senderId: socket.user.id });
+    io.to(receiverId.toString()).emit('typing', { senderId: socket.user });
   });
 
   // Event zum Stoppen des Typing-Status
   socket.on('stopTyping', (data) => {
     const { receiverId } = data;
-    io.to(receiverId.toString()).emit('stopTyping', { senderId: socket.user.id });
+    io.to(receiverId.toString()).emit('stopTyping', { senderId: socket.user });
   });
 
   // Trennung der Verbindung
   socket.on('disconnect', () => {
-    console.log(`Benutzer getrennt: ${socket.user.id}`);
+    console.log(`Benutzer getrennt: ${socket.user}`);
   });
 });
 
 // Routen
 app.use('/messages', messageRoutes);
 
-// Basis-Route
-app.get('/', (req, res) => {
-  res.send('MessageService läuft!');
-});
+//// Basis-Route
+//app.get('/', (req, res) => {
+//  res.send('MessageService läuft!');
+//});
+
+// Verknüpfe die Express-Anwendung mit dem HTTP-Server
+server.on('request', app);
 
 // Server starten
 const PORT = process.env.PORT_MESSAGE || 5005;
-server.listen(PORT, () => console.log(`MessageService running on port ${PORT}`));
+server.listen(PORT, () => console.log(`SocketServer running on port ${PORT}`)); //wenn ich app.listen verwende funktioniert es
+

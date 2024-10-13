@@ -30,31 +30,50 @@ exports.sendMessage = async (req, res) => {
         // Sende die Nachricht an alle Teilnehmer in der Konversation in Echtzeit
         io.to(conversationId).emit('newMessage', newMessage);
 
-        res.status(201).json(newMessage);
+        return res.status(201).json(newMessage);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+       return res.status(500).json({ error: error.message });
     }
 };
 
 // Nachrichten einer Konversation abrufen
 exports.getMessagesByConversation = async (req, res) => {
-  try {
-    const { conversationId } = req.params;
-    
-    console.log('Received Conversation ID:', conversationId); // Debug-Ausgabe
+    try {
+      const { conversationId } = req.params;
+      
+      console.log('Received Conversation ID:', conversationId); // Debug-Ausgabe
+  
+      const messages = await Message.find({ conversationId }).sort({ createdAt: 1 }).lean();
 
-    const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
-
-    if (!messages.length) {
-      return res.status(404).json({ error: 'No messages found for this conversation' });
+  
+      if (!messages.length) {
+        //return res.status(404).json({ error: 'No messages found for this conversation' });
+      }
+  
+      console.log('Messages:', messages); // Debug-Ausgabe
+  
+      // Überprüfe, ob die Nachrichten serialisierbar sind
+      try {
+        res.status(200).json(messages);
+      } catch (serializationError) {
+        console.error('Serialization error:', serializationError);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error serializing messages' });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error fetching messages' });
+      } else {
+        console.error('Headers were already sent. Cannot send response.');
+      }
     }
+  };
 
-    res.status(200).json(messages);
-  } catch (error) {
-    console.error('Error fetching messages:', error);
-    res.status(500).json({ error: 'Error fetching messages' });
-  }
-};
+exports.hallo = async (req, res) => {
+    res.status(200).send('safe');
+}
 
 
 
