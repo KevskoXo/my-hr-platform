@@ -2,7 +2,7 @@
 
 const Message = require('../models/messageModel');
 const axios = require('axios');
-const { io } = require('../server'); // Importiere Socket.IO-Instanz
+const { getIO } = require('../socket'); // Importiere Socket.IO-Instanz
 
 // Nachricht senden
 exports.sendMessage = async (req, res) => {
@@ -28,6 +28,7 @@ exports.sendMessage = async (req, res) => {
         );
 
         // Sende die Nachricht an alle Teilnehmer in der Konversation in Echtzeit
+        const io = getIO();
         io.to(conversationId).emit('newMessage', newMessage);
 
         return res.status(201).json(newMessage);

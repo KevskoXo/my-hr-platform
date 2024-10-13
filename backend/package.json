@@ -4,7 +4,7 @@
   "main": "app.js",
   "scripts": {
     "start": "concurrently \"node ./authenticationService/app.js\" \"node ./blocklistService/app.js\" \"node ./companyService/app.js\" \"node ./conversationService/app.js\" \"node ./jobApplicationService/app.js\" \"node ./jobService/app.js\" \"node ./messageService/app.js\" \"node ./recruiterService/app.js\" \"node ./reportingService/app.js\" \"node ./resumeService/app.js\" \"node ./userService/app.js\" \"node ./videoService/app.js\" \"node ./zoomService/app.js\"",
-    "dev": "concurrently \"nodemon ./authenticationService/app.js\" \"nodemon ./blocklistService/app.js\" \"nodemon ./companyService/app.js\" \"nodemon ./conversationService/app.js\" \"nodemon ./jobApplicationService/app.js\" \"nodemon ./jobService/app.js\" \"nodemon ./messageService/app.js\" \"nodemon ./recruiterService/app.js\" \"nodemon ./reportingService/app.js\" \"nodemon ./resumeService/app.js\" \"nodemon ./userService/app.js\" \"nodemon ./videoService/app.js\" \"nodemon ./zoomService/app.js\"",
+    "dev": "concurrently \"nodemon ./authenticationService/app.js\" \"nodemon ./blocklistService/app.js\" \"nodemon ./companyService/app.js\" \"nodemon ./conversationService/app.js\" \"nodemon ./jobApplicationService/app.js\" \"nodemon ./jobService/app.js\" \"nodemon ./messageService/index.js\" \"nodemon ./recruiterService/app.js\" \"nodemon ./reportingService/app.js\" \"nodemon ./resumeService/app.js\" \"nodemon ./userService/app.js\" \"nodemon ./videoService/app.js\" \"nodemon ./zoomService/app.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
