@@ -26,7 +26,6 @@ import ConversationsList from './ConversationsList';
 const SOCKET_SERVER_URL = process.env.REACT_APP_SOCKET_SERVER_URL || 'http://localhost:5005';
 
 const axiosInstance = createAxiosInstance('messages');
-const conversationsAxiosInstance = createAxiosInstance('conversations'); // Für den ConversationsService
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,10 +44,11 @@ const ChatWidget = () => {
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     socket.current = io(SOCKET_SERVER_URL, {
-      query: { token },
+      auth: { token },
     });
 
-    socket.current.on('receiveMessage', (message) => {
+    // Event-Listener für eingehende Nachrichten
+    socket.current.on('newMessage', (message) => {
       if (selectedConversation && message.conversationId === selectedConversation._id) {
         setMessages((prevMessages) => [...prevMessages, message]);
         scrollToBottom();
@@ -57,6 +57,7 @@ const ChatWidget = () => {
       }
     });
 
+    // Event-Listener für Schreibstatus (Tippen)
     socket.current.on('typing', (data) => {
       const { senderId } = data;
       if (!typingUsers.includes(senderId)) {
@@ -69,10 +70,15 @@ const ChatWidget = () => {
       setTypingUsers((prev) => prev.filter((id) => id !== senderId));
     });
 
+    // Event-Listener für Fehlermeldungen
+    socket.current.on('error', (error) => {
+      console.error('Socket.IO-Fehler:', error);
+    });
+
     return () => {
       socket.current.disconnect();
     };
-  }, [selectedConversation, typingUsers]);
+  }, [selectedConversation]);
 
   useEffect(() => {
     if (isOpen && selectedConversation) {
@@ -90,8 +96,7 @@ const ChatWidget = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(`/conversation/${selectedConversation._id}`);
-      console.log('hier sind wir mal');
-      setMessages(response.data); //direkt statt response.data.messages
+      setMessages(response.data);
       setLoading(false);
       scrollToBottom();
       setUnreadCount(0);
@@ -117,55 +122,53 @@ const ChatWidget = () => {
     setMessages([]);
     setTypingUsers([]);
     setUnreadCount(0);
+
+    // Tritt dem Konversationsraum bei
+    socket.current.emit('joinConversation', conversation._id);
   };
 
-  const sendMessage = async () => {
+  const sendMessage = () => {
     if (newMessage.trim() === '' && !selectedFile) return;
 
-    const formData = new FormData();
-    formData.append('conversationId', selectedConversation._id);
-    formData.append('content', newMessage);
-    formData.append('type', selectedFile ? 'image' : 'text');
+    const messageData = {
+      conversationId: selectedConversation._id,
+      content: newMessage,
+      type: selectedFile ? 'image' : 'text',
+    };
 
     if (selectedFile) {
-      formData.append('media', selectedFile);
-    }
-
-    try {
-      const response = await axiosInstance.post('/send', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
-
-      const savedMessage = response.data;
-      socket.current.emit('sendMessage', {
-        conversationId: savedMessage.conversationId,
-        content: savedMessage.content,
-        type: savedMessage.type,
-        media: savedMessage.media,
-      });
-
-      setMessages((prevMessages) => [...prevMessages, savedMessage]);
+      const reader = new FileReader();
+      reader.onload = () => {
+        messageData.media = reader.result; // Base64-kodierte Datei
+        socket.current.emit('sendMessage', messageData);
+        setMessages((prevMessages) => [...prevMessages, { ...messageData, sender: localStorage.getItem('userId') }]);
+        setNewMessage('');
+        setSelectedFile(null);
+        scrollToBottom();
+      };
+      reader.readAsDataURL(selectedFile);
+    } else {
+      socket.current.emit('sendMessage', messageData);
+      setMessages((prevMessages) => [...prevMessages, { ...messageData, sender: localStorage.getItem('userId') }]);
       setNewMessage('');
-      setSelectedFile(null);
       scrollToBottom();
-    } catch (error) {
-      console.error('Fehler beim Senden der Nachricht:', error);
     }
   };
 
   const handleTyping = (e) => {
     setNewMessage(e.target.value);
-    socket.current.emit('typing', { conversationId: selectedConversation._id });
+    if (selectedConversation) {
+      socket.current.emit('typing', { conversationId: selectedConversation._id });
+    }
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      socket.current.emit('stopTyping', { conversationId: selectedConversation._id });
+      if (selectedConversation) {
+        socket.current.emit('stopTyping', { conversationId: selectedConversation._id });
+      }
     }, 3000);
   };
 
@@ -177,6 +180,11 @@ const ChatWidget = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Hilfsfunktion, um den anderen Teilnehmer zu erhalten
+  const getOtherParticipant = (participants) => {
+    return participants.find((p) => p.user !== localStorage.getItem('userId'));
   };
 
   return (
@@ -209,8 +217,15 @@ const ChatWidget = () => {
             {selectedConversation ? (
               <>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Avatar src={selectedConversation.participants[0].avatar} alt={selectedConversation.participants[0].name} sx={{ marginRight: 1 }} />
-                  <Typography variant="h6">{selectedConversation.participants[0].name}</Typography>
+                  {(() => {
+                    const otherParticipant = getOtherParticipant(selectedConversation.participants);
+                    return (
+                      <>
+                        <Avatar src={otherParticipant.avatar} alt={otherParticipant.name} sx={{ marginRight: 1 }} />
+                        <Typography variant="h6">{otherParticipant.name}</Typography>
+                      </>
+                    );
+                  })()}
                 </Box>
                 <IconButton onClick={toggleDrawer}>
                   <CloseIcon />
@@ -239,22 +254,25 @@ const ChatWidget = () => {
                       <ListItem
                         key={index}
                         sx={{
-                          justifyContent: msg.sender === 'You' ? 'flex-end' : 'flex-start',
+                          justifyContent: msg.sender === localStorage.getItem('userId') ? 'flex-end' : 'flex-start',
                         }}
                       >
                         <ListItemText
-                          primary={msg.sender === 'You' ? 'You' : msg.sender.name}
+                          primary={msg.sender === localStorage.getItem('userId') ? 'Du' : msg.senderName || 'Anonym'}
                           secondary={
                             <>
                               {msg.type === 'text' && <span>{msg.content}</span>}
-                              {msg.type === 'image' && <img src={msg.media} alt="Gesendet" style={{ maxWidth: '100%', borderRadius: '8px' }} />}
+                              {msg.type === 'image' && (
+                                <img src={msg.media} alt="Gesendet" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                              )}
                             </>
                           }
                           sx={{
-                            textAlign: msg.sender === 'You' ? 'right' : 'left',
+                            textAlign: msg.sender === localStorage.getItem('userId') ? 'right' : 'left',
                             maxWidth: '70%',
                             wordBreak: 'break-word',
-                            backgroundColor: msg.sender === 'You' ? '#DCF8C6' : '#FFFFFF',
+                            backgroundColor:
+                              msg.sender === localStorage.getItem('userId') ? '#DCF8C6' : '#FFFFFF',
                             borderRadius: 2,
                             padding: 1,
                           }}
@@ -262,9 +280,13 @@ const ChatWidget = () => {
                       </ListItem>
                     ))}
                     <div ref={messagesEndRef} />
-                    {typingUsers.includes(selectedConversation._id) && (
-                      <Typography variant="body2" color="textSecondary" sx={{ marginLeft: 'auto', marginRight: 'auto' }}>
-                        {selectedConversation.participants[0].name} tippt...
+                    {typingUsers.length > 0 && (
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        sx={{ marginLeft: 'auto', marginRight: 'auto' }}
+                      >
+                        {typingUsers.map((id) => id).join(', ')} tippt...
                       </Typography>
                     )}
                   </List>
@@ -280,6 +302,7 @@ const ChatWidget = () => {
                   fullWidth
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
+                      e.preventDefault(); // Verhindert Zeilenumbruch
                       sendMessage();
                     }
                   }}

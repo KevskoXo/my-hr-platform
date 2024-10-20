@@ -1,5 +1,3 @@
-// src/components/ConversationsList.js
-
 import React, { useEffect, useState } from 'react';
 import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Divider, CircularProgress, Box } from '@mui/material';
 import createAxiosInstance from '../services/axiosInstance'; // Importiere deine Axios-Instanz
