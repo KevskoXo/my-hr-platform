@@ -27,5 +27,5 @@ mongoose.connect(process.env.MONGO_URI_CONVERSATION)
 const conversationRoutes = require('./routes/conversationRoutes');
 app.use('/conversations', conversationRoutes);
 
-const PORT = process.env.PORT_CONVERSATION || 5001; // Ein anderer Port als der User Service
+const PORT = process.env.PORT_CONVERSATION || 5006; // Ein anderer Port als der User Service
 app.listen(PORT, () => console.log(`ConversationService running on port ${PORT}`));

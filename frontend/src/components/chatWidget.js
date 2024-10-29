@@ -1,21 +1,5 @@
-// src/components/ChatWidget.js
-
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Box,
-  IconButton,
-  Badge,
-  Drawer,
-  TextField,
-  List,
-  ListItem,
-  ListItemAvatar,
-  Avatar,
-  ListItemText,
-  Typography,
-  Divider,
-  CircularProgress,
-} from '@mui/material';
+import { Box, IconButton, Badge, Drawer, TextField, List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Divider, CircularProgress } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
@@ -23,13 +7,12 @@ import { io } from 'socket.io-client';
 import createAxiosInstance from '../services/axiosInstance';
 import ConversationsList from './ConversationsList';
 
-const SOCKET_SERVER_URL = process.env.REACT_APP_SOCKET_SERVER_URL || 'http://localhost:5005';
+const SOCKET_SERVER_URL = process.env.REACT_APP_SOCKET_SERVER_URL || 'http://localhost:5013';
 
 const axiosInstance = createAxiosInstance('messages');
 
-const ChatWidget = () => {
+const ChatWidget = ({ conversationId }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
@@ -47,9 +30,9 @@ const ChatWidget = () => {
       auth: { token },
     });
 
-    // Event-Listener für eingehende Nachrichten
+    // Event listeners
     socket.current.on('newMessage', (message) => {
-      if (selectedConversation && message.conversationId === selectedConversation._id) {
+      if (message.conversationId === conversationId) {
         setMessages((prevMessages) => [...prevMessages, message]);
         scrollToBottom();
       } else {
@@ -57,7 +40,6 @@ const ChatWidget = () => {
       }
     });
 
-    // Event-Listener für Schreibstatus (Tippen)
     socket.current.on('typing', (data) => {
       const { senderId } = data;
       if (!typingUsers.includes(senderId)) {
@@ -70,21 +52,20 @@ const ChatWidget = () => {
       setTypingUsers((prev) => prev.filter((id) => id !== senderId));
     });
 
-    // Event-Listener für Fehlermeldungen
     socket.current.on('error', (error) => {
-      console.error('Socket.IO-Fehler:', error);
+      console.error('Socket.IO error:', error);
     });
 
     return () => {
       socket.current.disconnect();
     };
-  }, [selectedConversation]);
+  }, [conversationId]);
 
   useEffect(() => {
-    if (isOpen && selectedConversation) {
+    if (isOpen && conversationId) {
       fetchMessages();
     }
-  }, [isOpen, selectedConversation]);
+  }, [isOpen, conversationId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -95,13 +76,13 @@ const ChatWidget = () => {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/conversation/${selectedConversation._id}`);
+      const response = await axiosInstance.get(`/conversation/${conversationId}`);
       setMessages(response.data);
       setLoading(false);
       scrollToBottom();
       setUnreadCount(0);
     } catch (error) {
-      console.error('Fehler beim Abrufen der Nachrichten:', error);
+      console.error('Error fetching messages:', error);
       setLoading(false);
     }
   };
@@ -109,29 +90,17 @@ const ChatWidget = () => {
   const toggleDrawer = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
-      setSelectedConversation(null);
       setMessages([]);
       setTypingUsers([]);
       setUnreadCount(0);
     }
   };
 
-  const handleSelectConversation = (conversation) => {
-    setSelectedConversation(conversation);
-    setIsOpen(true);
-    setMessages([]);
-    setTypingUsers([]);
-    setUnreadCount(0);
-
-    // Tritt dem Konversationsraum bei
-    socket.current.emit('joinConversation', conversation._id);
-  };
-
   const sendMessage = () => {
     if (newMessage.trim() === '' && !selectedFile) return;
 
     const messageData = {
-      conversationId: selectedConversation._id,
+      conversationId,
       content: newMessage,
       type: selectedFile ? 'image' : 'text',
     };
@@ -139,7 +108,7 @@ const ChatWidget = () => {
     if (selectedFile) {
       const reader = new FileReader();
       reader.onload = () => {
-        messageData.media = reader.result; // Base64-kodierte Datei
+        messageData.media = reader.result;
         socket.current.emit('sendMessage', messageData);
         setMessages((prevMessages) => [...prevMessages, { ...messageData, sender: localStorage.getItem('userId') }]);
         setNewMessage('');
@@ -157,8 +126,8 @@ const ChatWidget = () => {
 
   const handleTyping = (e) => {
     setNewMessage(e.target.value);
-    if (selectedConversation) {
-      socket.current.emit('typing', { conversationId: selectedConversation._id });
+    if (conversationId) {
+      socket.current.emit('typing', { conversationId });
     }
 
     if (typingTimeoutRef.current) {
@@ -166,8 +135,8 @@ const ChatWidget = () => {
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      if (selectedConversation) {
-        socket.current.emit('stopTyping', { conversationId: selectedConversation._id });
+      if (conversationId) {
+        socket.current.emit('stopTyping', { conversationId });
       }
     }, 3000);
   };
@@ -180,11 +149,6 @@ const ChatWidget = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Hilfsfunktion, um den anderen Teilnehmer zu erhalten
-  const getOtherParticipant = (participants) => {
-    return participants.find((p) => p.user !== localStorage.getItem('userId'));
   };
 
   return (
@@ -214,126 +178,98 @@ const ChatWidget = () => {
       >
         <Box sx={{ padding: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {selectedConversation ? (
-              <>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  {(() => {
-                    const otherParticipant = getOtherParticipant(selectedConversation.participants);
-                    return (
-                      <>
-                        <Avatar src={otherParticipant.avatar} alt={otherParticipant.name} sx={{ marginRight: 1 }} />
-                        <Typography variant="h6">{otherParticipant.name}</Typography>
-                      </>
-                    );
-                  })()}
-                </Box>
-                <IconButton onClick={toggleDrawer}>
-                  <CloseIcon />
-                </IconButton>
-              </>
+            <Typography variant="h6">Chat</Typography>
+            <IconButton onClick={toggleDrawer}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          <Box sx={{ flexGrow: 1, overflowY: 'auto', marginTop: 2 }}>
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                <CircularProgress />
+              </Box>
             ) : (
-              <>
-                <Typography variant="h6">Konversationen</Typography>
-                <IconButton onClick={toggleDrawer}>
-                  <CloseIcon />
-                </IconButton>
-              </>
+              <List>
+                {messages.map((msg, index) => (
+                  <ListItem
+                    key={index}
+                    sx={{
+                      justifyContent: msg.sender === localStorage.getItem('userId') ? 'flex-end' : 'flex-start',
+                    }}
+                  >
+                    <ListItemText
+                      primary={msg.sender === localStorage.getItem('userId') ? 'You' : msg.senderName || 'Anonymous'}
+                      secondary={
+                        <>
+                          {msg.type === 'text' && <span>{msg.content}</span>}
+                          {msg.type === 'image' && (
+                            <img src={msg.media} alt="Sent" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                          )}
+                        </>
+                      }
+                      sx={{
+                        textAlign: msg.sender === localStorage.getItem('userId') ? 'right' : 'left',
+                        maxWidth: '70%',
+                        wordBreak: 'break-word',
+                        backgroundColor: msg.sender === localStorage.getItem('userId') ? '#DCF8C6' : '#FFFFFF',
+                        borderRadius: 2,
+                        padding: 1,
+                      }}
+                    />
+                  </ListItem>
+                ))}
+                <div ref={messagesEndRef} />
+                {typingUsers.length > 0 && (
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    sx={{ marginLeft: 'auto', marginRight: 'auto' }}
+                  >
+                    {typingUsers.map((id) => id).join(', ')} is typing...
+                  </Typography>
+                )}
+              </List>
             )}
           </Box>
 
-          {selectedConversation ? (
-            <>
-              <Box sx={{ flexGrow: 1, overflowY: 'auto', marginTop: 2 }}>
-                {loading ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                    <CircularProgress />
-                  </Box>
-                ) : (
-                  <List>
-                    {messages.map((msg, index) => (
-                      <ListItem
-                        key={index}
-                        sx={{
-                          justifyContent: msg.sender === localStorage.getItem('userId') ? 'flex-end' : 'flex-start',
-                        }}
-                      >
-                        <ListItemText
-                          primary={msg.sender === localStorage.getItem('userId') ? 'Du' : msg.senderName || 'Anonym'}
-                          secondary={
-                            <>
-                              {msg.type === 'text' && <span>{msg.content}</span>}
-                              {msg.type === 'image' && (
-                                <img src={msg.media} alt="Gesendet" style={{ maxWidth: '100%', borderRadius: '8px' }} />
-                              )}
-                            </>
-                          }
-                          sx={{
-                            textAlign: msg.sender === localStorage.getItem('userId') ? 'right' : 'left',
-                            maxWidth: '70%',
-                            wordBreak: 'break-word',
-                            backgroundColor:
-                              msg.sender === localStorage.getItem('userId') ? '#DCF8C6' : '#FFFFFF',
-                            borderRadius: 2,
-                            padding: 1,
-                          }}
-                        />
-                      </ListItem>
-                    ))}
-                    <div ref={messagesEndRef} />
-                    {typingUsers.length > 0 && (
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ marginLeft: 'auto', marginRight: 'auto' }}
-                      >
-                        {typingUsers.map((id) => id).join(', ')} tippt...
-                      </Typography>
-                    )}
-                  </List>
-                )}
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
-                <TextField
-                  variant="outlined"
-                  label="Nachricht"
-                  value={newMessage}
-                  onChange={handleTyping}
-                  fullWidth
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault(); // Verhindert Zeilenumbruch
-                      sendMessage();
-                    }
-                  }}
-                />
-                <input
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  id="upload-file"
-                  type="file"
-                  onChange={handleFileChange}
-                />
-                <label htmlFor="upload-file">
-                  <IconButton component="span" color="primary">
-                    📎
-                  </IconButton>
-                </label>
-                <IconButton color="primary" onClick={sendMessage}>
-                  <SendIcon />
-                </IconButton>
-              </Box>
-              {selectedFile && (
-                <Box sx={{ marginTop: 1, display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body2">{selectedFile.name}</Typography>
-                  <IconButton size="small" onClick={() => setSelectedFile(null)}>
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              )}
-            </>
-          ) : (
-            <ConversationsList onSelectConversation={handleSelectConversation} />
+          <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+            <TextField
+              variant="outlined"
+              label="Message"
+              value={newMessage}
+              onChange={handleTyping}
+              fullWidth
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+            />
+            <input
+              accept="image/*"
+              style={{ display: 'none' }}
+              id="upload-file"
+              type="file"
+              onChange={handleFileChange}
+            />
+            <label htmlFor="upload-file">
+              <IconButton component="span" color="primary">
+                📎
+              </IconButton>
+            </label>
+            <IconButton color="primary" onClick={sendMessage}>
+              <SendIcon />
+            </IconButton>
+          </Box>
+          {selectedFile && (
+            <Box sx={{ marginTop: 1, display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body2">{selectedFile.name}</Typography>
+              <IconButton size="small" onClick={() => setSelectedFile(null)}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
           )}
         </Box>
       </Drawer>

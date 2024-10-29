@@ -17,7 +17,7 @@ import RegisterNewRecruiterPage from './pages/RegisterNewRecruiterPage';
 import RecruiterUserSearchPage from './pages/RecruiterUserSearchPage';
 import RecruiterJobPage from './pages/RecruiterJobPage';
 import RecruiterJobEditPage from './pages/RecruiterJobEditPage';
-import ChatWidget from './components/ChatWidget';
+import ChatApp from './components/ChatApp';
 
 
 // Definiere die Routen, auf denen das ChatWidget nicht angezeigt werden soll
@@ -28,7 +28,7 @@ const AppRoutes = () => {
     const location = useLocation();
 
     // Prüfe, ob die aktuelle Route in den ausgeschlossenen Routen enthalten ist
-    const shouldShowChatWidget = !excludedRoutes.includes(location.pathname);
+    const shouldShowChatApp = !excludedRoutes.includes(location.pathname);
 
     return (
         <>
@@ -53,8 +53,8 @@ const AppRoutes = () => {
                 <Route path="/recruiter/jobs/:jobId/edit" element={<ProtectedRoute allowedRoles={['recruiter', 'admin', 'superAdmin']}><RecruiterJobEditPage /></ProtectedRoute>} />
 
             </Routes>
-            {/* Bedingtes Rendern des ChatWidgets */}
-            {shouldShowChatWidget && <ChatWidget />}
+            {/* Bedingtes Rendern des ChatApp */}
+            {shouldShowChatApp && <ChatApp />}
         </>
     );
 }

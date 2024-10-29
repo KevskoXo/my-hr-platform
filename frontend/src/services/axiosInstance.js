@@ -8,9 +8,9 @@ const SERVICE_PORTS = {
   recruiters: '5002/recruiters', //Port für recruiter (superAdmin, admin, recruiter)
   companies: '5003/companies',
   resume: '5004/resume', // Beispiel: Port für Resume-Service
-  messages: '5005/messages',
-  conversations: '5006/conversations',
-  authentication: '5012/authentication'
+  messages: '5013/messages',
+  conversations: '5013/conversations',
+  authentication: '5012/authentication',
   // Weitere Services nach Bedarf hinzufügen
 };
 

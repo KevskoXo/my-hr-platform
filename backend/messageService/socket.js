@@ -4,7 +4,7 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const Message = require('./models/messageModel');
-const axios = require('axios');
+const { checkUserInConversation } = require('./utils/conversationUtils');
 
 dotenv.config();
 
@@ -12,19 +12,16 @@ let io;
 
 module.exports = {
   init: function (server) {
-    // CORS-Optionen
     const corsOptions = {
-      origin: 'http://localhost:3000', // Passe dies an deine Frontend-URL an
+      origin: 'http://localhost:3000',
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       credentials: true,
     };
 
-    // Initialisiere Socket.IO
     io = new Server(server, {
       cors: corsOptions,
     });
 
-    // Authentifizierungsmiddleware für Socket.IO-Verbindungen
     io.use((socket, next) => {
       const token = socket.handshake.query.token || socket.handshake.auth.token;
       if (!token) {
@@ -33,7 +30,7 @@ module.exports = {
 
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        socket.user = decoded; // Enthält userId und ggf. weitere Informationen
+        socket.user = decoded;
         next();
       } catch (err) {
         console.error('Socket.IO Auth Error:', err.message);
@@ -41,7 +38,6 @@ module.exports = {
       }
     });
 
-    // Socket.IO-Verbindung und Events
     io.on('connection', (socket) => {
       if (!socket.user) {
         console.error('User information is not available after authentication');
@@ -51,10 +47,8 @@ module.exports = {
 
       console.log(`Benutzer verbunden: ${socket.user.userId}`);
 
-      // Event zum Beitreten zu einer Konversation
       socket.on('joinConversation', async (conversationId) => {
         try {
-          // Überprüfe, ob der Benutzer Teilnehmer der Konversation ist
           const isParticipant = await checkUserInConversation(
             socket.user.userId,
             conversationId,
@@ -72,13 +66,11 @@ module.exports = {
         }
       });
 
-      // Event zum Senden einer Nachricht
       socket.on('sendMessage', async (data) => {
         try {
           const { conversationId, content, media, type } = data;
           const senderId = socket.user.userId;
 
-          // Überprüfe, ob der Benutzer Teilnehmer der Konversation ist
           const isParticipant = await checkUserInConversation(
             senderId,
             conversationId,
@@ -89,7 +81,6 @@ module.exports = {
             return;
           }
 
-          // Media-Datei verarbeiten (falls vorhanden)
           let mediaUrl = null;
           if (media) {
             // Implementiere die Logik zum Speichern der Datei und erhalte die URL
@@ -97,7 +88,6 @@ module.exports = {
             // mediaUrl = await saveMediaFile(media);
           }
 
-          // Neue Nachricht erstellen
           const newMessage = new Message({
             sender: senderId,
             senderModel: socket.user.role === 'user' ? 'User' : 'Recruiter',
@@ -109,7 +99,6 @@ module.exports = {
 
           await newMessage.save();
 
-          // Aktualisiere das `updatedAt`-Feld der Konversation
           await axios.put(
             `${process.env.CONVERSATION_SERVICE_URL}/update/${conversationId}`,
             { lastActivity: new Date() },
@@ -120,7 +109,6 @@ module.exports = {
             }
           );
 
-          // Sende die Nachricht an alle Teilnehmer in Echtzeit
           io.to(conversationId).emit('newMessage', newMessage);
         } catch (error) {
           console.error('Fehler beim Senden der Nachricht:', error);
@@ -128,7 +116,6 @@ module.exports = {
         }
       });
 
-      // Event für den Schreibstatus (Tippen)
       socket.on('typing', (data) => {
         const { conversationId } = data;
         socket.to(conversationId).emit('typing', { senderId: socket.user.userId, conversationId });
@@ -139,7 +126,6 @@ module.exports = {
         socket.to(conversationId).emit('stopTyping', { senderId: socket.user.userId, conversationId });
       });
 
-      // Nachricht bearbeiten
       socket.on('editMessage', async (data) => {
         const { messageId, newContent } = data;
         const userId = socket.user.userId;
@@ -159,7 +145,6 @@ module.exports = {
           message.content = newContent;
           await message.save();
 
-          // Benachrichtige alle Teilnehmer über die aktualisierte Nachricht
           io.to(message.conversationId.toString()).emit('messageEdited', message);
         } catch (error) {
           console.error('Fehler beim Bearbeiten der Nachricht:', error);
@@ -167,7 +152,6 @@ module.exports = {
         }
       });
 
-      // Nachricht löschen
       socket.on('deleteMessage', async (data) => {
         const { messageId } = data;
         const userId = socket.user.userId;
@@ -186,7 +170,6 @@ module.exports = {
 
           await Message.findByIdAndDelete(messageId);
 
-          // Benachrichtige alle Teilnehmer über die gelöschte Nachricht
           io.to(message.conversationId.toString()).emit('messageDeleted', { messageId });
         } catch (error) {
           console.error('Fehler beim Löschen der Nachricht:', error);
@@ -194,7 +177,6 @@ module.exports = {
         }
       });
 
-      // Reaktion hinzufügen
       socket.on('addReaction', async (data) => {
         const { messageId, reaction } = data;
         const userId = socket.user.userId;
@@ -206,7 +188,6 @@ module.exports = {
             return;
           }
 
-          // Stelle sicher, dass der Benutzer Teilnehmer der Konversation ist
           const isParticipant = await checkUserInConversation(
             userId,
             message.conversationId.toString(),
@@ -220,7 +201,6 @@ module.exports = {
           message.reactions.push({ user: userId, reaction });
           await message.save();
 
-          // Benachrichtige alle Teilnehmer über die neue Reaktion
           io.to(message.conversationId.toString()).emit('reactionAdded', {
             messageId,
             userId,
@@ -232,7 +212,6 @@ module.exports = {
         }
       });
 
-      // Reaktion entfernen
       socket.on('removeReaction', async (data) => {
         const { messageId, reaction } = data;
         const userId = socket.user.userId;
@@ -244,7 +223,6 @@ module.exports = {
             return;
           }
 
-          // Stelle sicher, dass der Benutzer Teilnehmer der Konversation ist
           const isParticipant = await checkUserInConversation(
             userId,
             message.conversationId.toString(),
@@ -260,7 +238,6 @@ module.exports = {
           );
           await message.save();
 
-          // Benachrichtige alle Teilnehmer über die entfernte Reaktion
           io.to(message.conversationId.toString()).emit('reactionRemoved', {
             messageId,
             userId,
@@ -272,7 +249,6 @@ module.exports = {
         }
       });
 
-      // Lesebestätigung
       socket.on('markMessageAsRead', async (data) => {
         const { messageId } = data;
         const userId = socket.user.userId;
@@ -284,7 +260,6 @@ module.exports = {
             return;
           }
 
-          // Stelle sicher, dass der Benutzer Teilnehmer der Konversation ist
           const isParticipant = await checkUserInConversation(
             userId,
             message.conversationId.toString(),
@@ -299,7 +274,6 @@ module.exports = {
             message.readBy.push(userId);
             await message.save();
 
-            // Benachrichtige die Teilnehmer über die Lesebestätigung
             io.to(message.conversationId.toString()).emit('messageRead', {
               messageId,
               readerId: userId,
@@ -311,33 +285,10 @@ module.exports = {
         }
       });
 
-      // Benutzer trennt die Verbindung
       socket.on('disconnect', () => {
         console.log(`Benutzer getrennt: ${socket.user.userId}`);
       });
     });
-
-    // Hilfsfunktion, um zu überprüfen, ob der Benutzer Teilnehmer der Konversation ist
-    async function checkUserInConversation(userId, conversationId, token) {
-      try {
-        const response = await axios.get(
-          `${process.env.CONVERSATION_SERVICE_URL}/${conversationId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const conversation = response.data;
-        return conversation.participants.includes(userId);
-      } catch (error) {
-        console.error(
-          'Fehler beim Überprüfen der Konversationsteilnahme:',
-          error.response ? error.response.data : error.message
-        );
-        return false;
-      }
-    }
 
     return io;
   },

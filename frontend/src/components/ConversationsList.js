@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Divider, CircularProgress, Box } from '@mui/material';
-import createAxiosInstance from '../services/axiosInstance'; // Importiere deine Axios-Instanz
+import createAxiosInstance from '../services/axiosInstance'; // Import your Axios instance
+import { jwtDecode } from 'jwt-decode';
 
 const ConversationsList = ({ onSelectConversation }) => {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Erstelle eine Axios-Instanz für den 'conversations' Service
+  // Create an Axios instance for the 'conversations' service
   const axiosInstance = createAxiosInstance('conversations');
-
+  const decoded = jwtDecode(localStorage.getItem('accessToken'));
+  const userId = decoded.userId;
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const response = await axiosInstance.get('/user/' + localStorage.getItem('userId')); // Verwende die richtige Route zum Abrufen der Benutzer-Konversationen
+        const response = await axiosInstance.get('/user/' + userId); // Use the correct route to fetch user conversations
         setConversations(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Fehler beim Abrufen der Konversationen:', error);
+        console.error('Error fetching conversations:', error);
         setLoading(false);
       }
     };
@@ -42,7 +44,7 @@ const ConversationsList = ({ onSelectConversation }) => {
             </ListItemAvatar>
             <ListItemText
               primary={conv.participants.find((p) => p.user !== localStorage.getItem('userId')).name}
-              secondary={conv.lastMessage || 'Keine Nachrichten'}
+              secondary={conv.lastMessage || 'No messages'}
             />
           </ListItem>
           <Divider variant="inset" component="li" />
@@ -50,7 +52,7 @@ const ConversationsList = ({ onSelectConversation }) => {
       ))}
       {conversations.length === 0 && (
         <Typography variant="body2" color="textSecondary" align="center">
-          Keine Konversationen gefunden.
+          No conversations found.
         </Typography>
       )}
     </List>
