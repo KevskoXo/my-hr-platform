@@ -2,6 +2,7 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const Message = require('./models/messageModel');
+const Conversation = require('./models/conversationModel');
 const { checkUserInConversation } = require('./utils/conversationUtils');
 
 dotenv.config();
@@ -68,6 +69,8 @@ module.exports = {
         try {
           const { conversationId, content, media, type } = data;
           const senderId = socket.user.userId;
+
+          console.log('Received sendMessage event with conversation ID:', conversationId); // Add logging
 
           const isParticipant = await checkUserInConversation(
             senderId,

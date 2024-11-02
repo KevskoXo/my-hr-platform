@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import ConversationsList from './ConversationsList';
 import ChatWidget from './ChatWidget';
 
 const ChatApp = () => {
@@ -11,10 +10,10 @@ const ChatApp = () => {
 
   return (
     <div className="chat-app">
-      <ConversationsList onSelectConversation={handleSelectConversation} />
-      {selectedConversation && (
-        <ChatWidget conversationId={selectedConversation._id} />
-      )}
+      <ChatWidget
+        selectedConversation={selectedConversation}
+        onSelectConversation={handleSelectConversation}
+      />
     </div>
   );
 };
