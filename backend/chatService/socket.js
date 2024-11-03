@@ -70,7 +70,7 @@ module.exports = {
           const { conversationId, content, media, type } = data;
           const senderId = socket.user.userId;
 
-          console.log('Received sendMessage event with conversation ID:', conversationId); // Add logging
+          console.log('Received sendMessage event with conversation ID:', conversationId);
 
           const isParticipant = await checkUserInConversation(
             senderId,

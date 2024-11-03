@@ -19,13 +19,11 @@ const ChatWidget = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
-  const [typingUsers, setTypingUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
   const socket = useRef(null);
   const messagesEndRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -41,18 +39,6 @@ const ChatWidget = () => {
       } else {
         setUnreadCount((prevCount) => prevCount + 1);
       }
-    });
-
-    socket.current.on('typing', (data) => {
-      const { senderId } = data;
-      if (!typingUsers.includes(senderId)) {
-        setTypingUsers((prev) => [...prev, senderId]);
-      }
-    });
-
-    socket.current.on('stopTyping', (data) => {
-      const { senderId } = data;
-      setTypingUsers((prev) => prev.filter((id) => id !== senderId));
     });
 
     socket.current.on('error', (error) => {
@@ -94,7 +80,6 @@ const ChatWidget = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
       setMessages([]);
-      setTypingUsers([]);
       setUnreadCount(0);
       setSelectedConversation(null);
     }
@@ -128,23 +113,6 @@ const ChatWidget = () => {
       setNewMessage('');
       scrollToBottom();
     }
-  };
-
-  const handleTyping = (e) => {
-    setNewMessage(e.target.value);
-    if (selectedConversation) {
-      socket.current.emit('typing', { conversationId: selectedConversation._id });
-    }
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      if (selectedConversation) {
-        socket.current.emit('stopTyping', { conversationId: selectedConversation._id });
-      }
-    }, 3000);
   };
 
   const handleFileChange = (e) => {
@@ -234,15 +202,6 @@ const ChatWidget = () => {
                       </ListItem>
                     ))}
                     <div ref={messagesEndRef} />
-                    {typingUsers.length > 0 && (
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        sx={{ marginLeft: 'auto', marginRight: 'auto' }}
-                      >
-                        {typingUsers.map((id) => id).join(', ')} is typing...
-                      </Typography>
-                    )}
                   </List>
                 )}
               </>
@@ -257,7 +216,7 @@ const ChatWidget = () => {
                 variant="outlined"
                 label="Message"
                 value={newMessage}
-                onChange={handleTyping}
+                onChange={(e) => setNewMessage(e.target.value)}
                 fullWidth
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
