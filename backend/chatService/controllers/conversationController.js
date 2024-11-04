@@ -4,15 +4,25 @@ const mongoose = require('mongoose');
 // Create a new conversation
 exports.createConversation = async (req, res) => {
   try {
-    const { participants } = req.body;
+    const { participantId } = req.body; // The ID of the other participant
+    const userId = req.user.userId; // Assuming the user ID is stored in req.user
 
-    // Ensure participants array is not empty
-    if (!participants || participants.length === 0) {
-      return res.status(400).json({ error: 'Participants are required' });
+    // Ensure participantId is provided
+    if (!participantId) {
+      return res.status(400).json({ error: 'Participant ID is required' });
+    }
+
+    // Ensure the conversation does not already exist
+    const existingConversation = await Conversation.findOne({
+      participants: { $all: [userId, participantId] },
+    });
+
+    if (existingConversation) {
+      return res.status(200).json(existingConversation);
     }
 
     const newConversation = new Conversation({
-      participants,
+      participants: [userId, participantId],
     });
 
     await newConversation.save();
