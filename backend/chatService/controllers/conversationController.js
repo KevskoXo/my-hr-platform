@@ -4,17 +4,21 @@ const mongoose = require('mongoose');
 // Create a new conversation
 exports.createConversation = async (req, res) => {
   try {
-    const { participantId } = req.body; // The ID of the other participant
-    const userId = req.user.userId; // Assuming the user ID is stored in req.user
+    const { participantId, participantType } = req.body; // The ID and type of the other participant
+    const { userId, role: userType, name: userName, email: userEmail, company: userCompany } = req.user;
 
-    // Ensure participantId is provided
-    if (!participantId) {
-      return res.status(400).json({ error: 'Participant ID is required' });
+    // Ensure participantId and participantType are provided
+    if (!participantId || !participantType) {
+      return res.status(400).json({ error: 'Participant ID and type are required' });
     }
+
+    // Fetch participant information
+    const participantResponse = await axios.get(`http://localhost:5000/api/${participantType.toLowerCase()}s/${participantId}`);
+    const participant = participantResponse.data;
 
     // Ensure the conversation does not already exist
     const existingConversation = await Conversation.findOne({
-      participants: { $all: [userId, participantId] },
+      participants: { $all: [{ user: userId, model: userType }, { user: participantId, model: participantType }] },
     });
 
     if (existingConversation) {
@@ -22,7 +26,10 @@ exports.createConversation = async (req, res) => {
     }
 
     const newConversation = new Conversation({
-      participants: [userId, participantId],
+      participants: [
+        { user: userId, model: userType, name: userName, avatar: userCompany }, // Assuming company is used as avatar
+        { user: participantId, model: participantType, name: participant.name, avatar: participant.avatar },
+      ],
     });
 
     await newConversation.save();
